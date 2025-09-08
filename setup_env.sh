@@ -13,7 +13,7 @@ pip install -r requirements.txt
 
 # PATH 설정 확인
 echo "3. PATH 설정 확인 중..."
-export PATH="/home/joonhyoung-lee/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
 # 디렉토리 구조 확인
 echo "4. 프로젝트 디렉토리 구조:"

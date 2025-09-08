@@ -1,7 +1,9 @@
 #!/bin/bash
 # Portrait Outline 프로젝트 전용 도구 설치 스크립트
 
-PROJECT_ROOT="/home/joonhyoung-lee/바탕화면/arti_outlines"
+# 스크립트 위치를 기준으로 프로젝트 루트 설정
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR"
 TOOLS_DIR="$PROJECT_ROOT/.tools"
 ENV_NAME="portrait_outline"
 
@@ -30,14 +32,15 @@ cat > "$PROJECT_ROOT/.env" << 'EOF'
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate portrait_outline
 
-# 프로젝트 루트 디렉토리
-export PORTRAIT_OUTLINE_ROOT="/home/joonhyoung-lee/바탕화면/arti_outlines"
+# 프로젝트 루트 디렉토리 (동적으로 설정)
+SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+export PORTRAIT_OUTLINE_ROOT="\$SCRIPT_DIR"
 
 # 프로젝트 도구 PATH 추가 (conda 환경 내 도구 우선)
-export PATH="$PORTRAIT_OUTLINE_ROOT/.tools/bin:$PATH"
+export PATH="\$PORTRAIT_OUTLINE_ROOT/.tools/bin:\$PATH"
 
 # 프로젝트 작업 디렉토리로 이동
-cd "$PORTRAIT_OUTLINE_ROOT"
+cd "\$PORTRAIT_OUTLINE_ROOT"
 
 echo "✅ Portrait Outline 환경 활성화됨"
 echo "📍 현재 디렉토리: $(pwd)"

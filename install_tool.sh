@@ -1,11 +1,15 @@
 #!/bin/bash
 # 프로젝트 전용 도구 설치 스크립트
 
-PROJECT_ROOT="/home/joonhyoung-lee/바탕화면/arti_outlines"
+# 스크립트 위치를 기준으로 프로젝트 루트 설정
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR"
 TOOLS_DIR="$PROJECT_ROOT/tools"
 
-# 환경 활성화
-source "$PROJECT_ROOT/.env"
+# 환경 활성화 (존재하는 경우에만)
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    source "$PROJECT_ROOT/.env"
+fi
 
 if [ $# -eq 0 ]; then
     echo "사용법: ./install_tool.sh <package_type> <package_name>"
