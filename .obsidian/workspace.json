@@ -1,0 +1,227 @@
+{
+  "main": {
+    "id": "1b6d3c787e5fc672",
+    "type": "split",
+    "children": [
+      {
+        "id": "4564449d05fadc40",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "89998ee4a63debcb",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Technical_Guideline.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Technical_Guideline"
+            }
+          },
+          {
+            "id": "71e7316f1bcca5a4",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "README.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "README"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "7a1e1606605892cb",
+    "type": "split",
+    "children": [
+      {
+        "id": "63292d95cbec1426",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1ddc19d40979def8",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "9018b81af3a18d20",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "29e61cd316773a2e",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "c38c3d67605147e6",
+    "type": "split",
+    "children": [
+      {
+        "id": "c90215e86a04fa6e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7abf8718ab5d050d",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Project explanation.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Project explanation"
+            }
+          },
+          {
+            "id": "a02da428a1e33e5c",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Project explanation.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Project explanation"
+            }
+          },
+          {
+            "id": "5e92914373de0b42",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "b5b976642ad84f32",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Project explanation.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Project explanation"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "71e7316f1bcca5a4",
+  "lastOpenFiles": [
+    "image_processing/beginner_output.svg",
+    "image_processing/intermediate_output.svg",
+    "image_processing/intermediate_guidelines.png",
+    "image_processing/guidelines.png",
+    "docs/Drawing_Rules.md",
+    "docs/GPU_Setup.md",
+    "docs/Portrait_Outline_Generator.md",
+    "README.md",
+    "CLAUDE.md",
+    "docs/Technical_Guideline.md",
+    "docs/README.md",
+    "image_processing/SVG_EXPORT_DOCUMENTATION.md",
+    "image_processing/SVG_QUICK_REFERENCE.md",
+    "image_processing/SVG_QUICK_REFERENCE.md.tmp.19665.1757487758485",
+    "README.md.tmp.19665.1757487721230",
+    "CLAUDE.md.tmp.19665.1757487602396",
+    "CLAUDE.md.tmp.19665.1757487592648",
+    "CLAUDE.md.tmp.19665.1757487577449",
+    "CLAUDE.md.tmp.19665.1757487556986",
+    "CLAUDE.md.tmp.19665.1757487542169",
+    "image_processing/out/portrait_wireframe.png",
+    "mediapipe_practice/face_landmark.ipynb.tmp.6031.1757443966553",
+    "mediapipe_practice/face_landmark.ipynb.tmp.6031.1757443955661",
+    "mediapipe_practice/face_landmark.ipynb.tmp.6031.1757443942043",
+    "image_processing/out/clipped_images_fg/97912_fg.png",
+    "image_processing/out/clipped_images_fg/97910_fg.png",
+    "image_processing/out/clipped_images_fg/97909_fg.png",
+    "image_processing/out/clipped_images_fg/97907_fg.png",
+    "image_processing/out/clipped_images_fg/97873_fg.png",
+    "image_processing/out/clipped_images_fg/96621_fg.png",
+    "README_GPU_SETUP.md",
+    "DexiNed/legacy/README.md",
+    "DexiNed/README.md",
+    "DexiNed/DexiNed-TF2/README.md",
+    "Technical_Guideline.md",
+    "Project explanation.md",
+    "Human_Drawing_Logic.md"
+  ]
+}

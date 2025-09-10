@@ -22,5 +22,5 @@ tree -L 2 . || ls -la
 echo "=== 환경 설정 완료 ==="
 echo "사용법:"
 echo "  - 데이터 다운로드: cd download_data && python aic_portrait_paintings_downloader.py"
-echo "  - 이미지 클리핑: python image_clipping/run_cutout.py -i <image_path>"
+echo "  - 이미지 처리: python image_processing/run_cutout.py -i <image_path>"
 echo "  - SuperClaude: superclaude install"

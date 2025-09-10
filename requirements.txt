@@ -1,3 +1,4 @@
+# Core dependencies
 opencv-python
 numpy
 mediapipe
@@ -6,4 +7,20 @@ onnxruntime
 pillow
 requests
 pathlib
+tqdm
 superclaude
+
+# GPU acceleration dependencies (optional)
+# Install via system package manager:
+# sudo apt install -y xvfb x11-utils mesa-utils
+# sudo apt install -y libegl1-mesa-dev libgl1-mesa-glx libgles2-mesa-dev
+# sudo apt install -y libvulkan1 mesa-vulkan-drivers
+# sudo apt install -y rocm-opencl rocm-opencl-dev
+# sudo apt install -y libx11-dev libxext-dev libxrender-dev libxtst6
+
+# For ROCm GPU acceleration (AMD)
+# onnxruntime-rocm  # Alternative to onnxruntime for AMD GPU
+
+# Jupyter notebook support
+jupyter
+matplotlib
