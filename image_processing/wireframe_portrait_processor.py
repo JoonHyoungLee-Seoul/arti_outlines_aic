@@ -117,6 +117,7 @@ class ConstructionLinesGenerator:
             if landmark_idx >= len(landmarks):
                 return None
             landmark = landmarks[landmark_idx]
+            # Landmarks are in [0,1] range relative to image size
             return (int(landmark.x * width), int(landmark.y * height))
         
         def draw_line_between_points(point_indices, line_color):
@@ -126,8 +127,8 @@ class ConstructionLinesGenerator:
                 point = get_pixel_coords(idx)
                 if point:
                     points.append(point)
-            
-            # Draw line through all points
+
+            # Connect the landmark points sequentially.
             for i in range(len(points) - 1):
                 cv2.line(annotated, points[i], points[i + 1], line_color, thickness)
             
@@ -186,11 +187,11 @@ class MeshGenerator:
             from mediapipe.framework.formats import landmark_pb2
             face_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
             face_landmarks_proto.landmark.extend([
-                landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) 
+                landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z)
                 for landmark in face_landmarks
             ])
-            
-            # Draw tesselation
+
+            # Draw tesselation: full triangular mesh across the face
             if colors['tesselation']:
                 self.mp_drawing.draw_landmarks(
                     image=annotated,
@@ -201,8 +202,8 @@ class MeshGenerator:
                         color=colors['tesselation'], thickness=config.mesh_thickness
                     )
                 )
-            
-            # Draw contours
+
+            # Draw contours: emphasis around outer facial features
             if colors['contours']:
                 self.mp_drawing.draw_landmarks(
                     image=annotated,
@@ -213,8 +214,8 @@ class MeshGenerator:
                         color=colors['contours'], thickness=config.mesh_thickness + 1
                     )
                 )
-            
-            # Draw irises
+
+            # Draw irises to show eye direction
             if colors['irises']:
                 self.mp_drawing.draw_landmarks(
                     image=annotated,
@@ -271,7 +272,8 @@ class DexiNedGenerator:
             Image with edge outline
         """
         if not DEXINED_AVAILABLE or self.model is None:
-            # Fallback to simple edge detection
+            # If the neural model isn't available fall back to a basic Canny
+            # edge detector so the pipeline still produces an outline.
             return self._fallback_edge_detection(image, config)
         
         try:
@@ -281,7 +283,7 @@ class DexiNedGenerator:
             if torch is not None:
                 with torch.no_grad():
                     predictions = self.model(img_tensor)
-                    edge_map = predictions[-1].cpu().numpy()[0, 0]
+                    edge_map = predictions[-1].cpu().numpy()[0, 0]  # Use final prediction map
             else:
                 edge_map = np.zeros((352, 352))
             
@@ -296,14 +298,14 @@ class DexiNedGenerator:
     
     def _preprocess_image(self, image: np.ndarray):
         """Preprocess image for DexiNed model"""
-        # Resize to model input size (typically 352x352)
+        # Resize to model input size (352x352 for DexiNed)
         img_resized = cv2.resize(image, (352, 352))
         
         # Convert to BGR and normalize
         img_bgr = cv2.cvtColor(img_resized, cv2.COLOR_RGB2BGR)
         img_float = img_bgr.astype(np.float32)
         
-        # Apply mean subtraction (DexiNed specific)
+        # Apply mean subtraction (DexiNed uses ImageNet means)
         mean_bgr = [103.939, 116.779, 123.68]
         for i in range(3):
             img_float[:, :, i] -= mean_bgr[i]
@@ -323,7 +325,7 @@ class DexiNedGenerator:
                           target_shape: Tuple[int, int, int],
                           config: WireframeConfig) -> np.ndarray:
         """Convert edge map to RGB image with white background"""
-        # Resize edge map to target shape
+        # Resize edge map back to the original image resolution
         edge_resized = cv2.resize(edge_map, (target_shape[1], target_shape[0]))
         
         # Apply threshold
@@ -340,7 +342,7 @@ class DexiNedGenerator:
     def _fallback_edge_detection(self, image: np.ndarray, config: WireframeConfig) -> np.ndarray:
         """Fallback edge detection using Canny with white background"""
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-        edges = cv2.Canny(gray, 50, 150)
+        edges = cv2.Canny(gray, 50, 150)  # Simple Canny edge detector
         
         # Convert to RGB with WHITE background
         edge_rgb = np.ones_like(image) * 255  # White background
@@ -531,11 +533,12 @@ class WireframePortraitProcessor:
             'landmarks': landmarks
         }
         
-        # Start with blank canvas (white background) - NO original image
+        # Start with blank canvas (white background) - the original photo is not
+        # part of the final wireframe output.
         height, width = image.shape[:2]
-        current_image = np.ones((height, width, 3), dtype=np.uint8) * 255  # White canvas
+        current_image = np.ones((height, width, 3), dtype=np.uint8) * 255
         
-        # Apply features based on configuration
+        # Sequentially overlay the requested features onto the canvas
         if self.config.enable_construction_lines:
             current_image = self.construction_generator.draw_construction_lines(
                 current_image, landmarks, self.config
@@ -554,7 +557,7 @@ class WireframePortraitProcessor:
             current_image = self._add_lines_to_canvas(current_image, outline_image)
             results['dexined_outline'] = current_image.copy()
         
-        # Apply background removal if needed
+        # Apply background removal if needed to produce RGBA output
         if self.config.output_format == "rgba":
             rgba_image = BackgroundRemover.create_wireframe_rgba(
                 current_image, landmarks, self.config.background_removal_method
@@ -565,7 +568,7 @@ class WireframePortraitProcessor:
             results['final_rgb'] = current_image
             final_result = current_image
         
-        # Generate SVG if enabled
+        # Generate SVG if requested
         svg_content = None
         if self.config.enable_svg_export or self.config.output_format == "svg":
             svg_content = self._generate_svg(image, landmarks, detection_result)
@@ -604,7 +607,8 @@ class WireframePortraitProcessor:
             print(f"Image not found: {image_path}")
             return None
         
-        # Read image with alpha channel support
+        # Read image with alpha channel support so transparent PNGs are handled
+        # correctly.
         image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
         if image is None:
             print(f"Could not load image: {image_path}")
@@ -613,16 +617,16 @@ class WireframePortraitProcessor:
         # Handle different channel counts
         if len(image.shape) == 3:
             if image.shape[2] == 4:  # BGRA
-                # Handle transparency by blending with white background
+                # Convert transparent images to RGB by compositing over white
                 image_rgba = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
                 height, width = image_rgba.shape[:2]
                 background = np.ones((height, width, 3), dtype=np.uint8) * 255
-                
+
                 alpha = image_rgba[:, :, 3] / 255.0
                 for c in range(3):
-                    background[:, :, c] = (alpha * image_rgba[:, :, c] + 
+                    background[:, :, c] = (alpha * image_rgba[:, :, c] +
                                          (1 - alpha) * background[:, :, c])
-                
+
                 image_rgb = background.astype(np.uint8)
             elif image.shape[2] == 3:  # BGR
                 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -640,10 +644,8 @@ class WireframePortraitProcessor:
             return None, None
         
         try:
-            # Convert to MediaPipe format
+            # Convert to MediaPipe format and run the face landmarker
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
-            
-            # Detect landmarks
             detection_result = self.detector.detect(mp_image)
             
             if detection_result.face_landmarks:
@@ -662,13 +664,13 @@ class WireframePortraitProcessor:
         
         # Find line pixels (non-white/non-background pixels)
         if len(line_image.shape) == 3:
-            # Color image - find any non-white pixels
+            # Color image - treat any non-white pixel as a line
             line_mask = ~np.all(line_image == [255, 255, 255], axis=2)
         else:
-            # Grayscale - find any non-white pixels  
+            # Grayscale - find any non-white pixels
             line_mask = line_image < 255
-        
-        # Add line pixels to canvas
+
+        # Copy the detected line pixels onto the canvas
         if len(line_image.shape) == 3:
             result[line_mask] = line_image[line_mask]
         else:

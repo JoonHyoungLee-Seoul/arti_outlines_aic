@@ -24,6 +24,7 @@ class SVGGenerator:
         self.width = width
         self.height = height
         self.background_color = background_color
+        # Build the <svg> root element once and reuse it for subsequent calls.
         self.svg_root = self._create_svg_root()
     
     def _create_svg_root(self) -> ET.Element:
@@ -33,14 +34,15 @@ class SVGGenerator:
         svg.set('width', str(self.width))
         svg.set('height', str(self.height))
         svg.set('viewBox', f'0 0 {self.width} {self.height}')
-        
-        # Add background
+
+        # Draw a background rectangle so exported files preview correctly in
+        # browsers that default to transparent SVG canvases.
         if self.background_color:
             background = ET.SubElement(svg, 'rect')
             background.set('width', '100%')
             background.set('height', '100%')
             background.set('fill', self.background_color)
-        
+
         return svg
     
     def add_construction_lines(self, landmarks: np.ndarray, config: dict):
@@ -52,12 +54,13 @@ class SVGGenerator:
             config: Configuration dictionary with line properties
         """
         group = ET.SubElement(self.svg_root, 'g')
-        group.set('id', 'construction-lines')
+        group.set('id', 'construction-lines')  # group for easy styling
         
         color = config.get('color', '#FF0000')
         thickness = config.get('thickness', 2)
         
-        # Convert normalized coordinates to pixel coordinates
+        # MediaPipe landmarks are normalized [0,1]. Convert them to absolute
+        # pixel coordinates for the SVG canvas.
         pixel_landmarks = [(int(lm[0] * self.width), int(lm[1] * self.height)) for lm in landmarks]
         
         def get_pixel_coords(landmark_idx):
@@ -76,13 +79,16 @@ class SVGGenerator:
                 point = get_pixel_coords(idx)
                 if point:
                     points.append(point)
-            
-            # Draw line through all points
+
+            # Draw line segments between each successive pair of landmarks.
             for i in range(len(points) - 1):
                 line_id_segment = f"{line_id}-{i}"
-                self._add_line(group, points[i][0], points[i][1], 
-                             points[i+1][0], points[i+1][1], 
-                             line_color, thickness, line_id_segment)
+                self._add_line(
+                    group,
+                    points[i][0], points[i][1],
+                    points[i+1][0], points[i+1][1],
+                    line_color, thickness, line_id_segment
+                )
         
         # Use the same landmark connections as the original wireframe processor
         
@@ -146,7 +152,7 @@ class SVGGenerator:
         thickness = config.get('thickness', 1)
         
         if len(edge_points) < 2:
-            return
+            return  # nothing to draw
         
         # Create path element for smooth curves
         path = ET.SubElement(group, 'path')
@@ -179,13 +185,13 @@ class SVGGenerator:
         
         for i, contour in enumerate(contours):
             if len(contour) < 3:
-                continue
+                continue  # Ignore tiny contours
                 
             path = ET.SubElement(group, 'path')
             path.set('id', f'contour-{i}')
             path.set('stroke', color)
             path.set('stroke-width', str(thickness))
-            path.set('fill', 'none')
+            path.set('fill', 'none')  # outlines only
             
             # Build path data from contour points
             points = contour.reshape(-1, 2)
@@ -200,7 +206,7 @@ class SVGGenerator:
             
             path.set('d', path_data)
     
-    def _add_line(self, parent: ET.Element, x1: int, y1: int, x2: int, y2: int, 
+    def _add_line(self, parent: ET.Element, x1: int, y1: int, x2: int, y2: int,
                   color: str, thickness: int, line_id: str):
         """Add a line element to the parent group."""
         line = ET.SubElement(parent, 'line')
@@ -216,8 +222,8 @@ class SVGGenerator:
         """Add metadata to SVG."""
         desc = ET.SubElement(self.svg_root, 'desc')
         desc.text = f"Wireframe Portrait - Generated with settings: {metadata}"
-        
-        # Add custom metadata
+
+        # Store additional machine-readable metadata as <meta> tags.
         metadata_group = ET.SubElement(self.svg_root, 'metadata')
         for key, value in metadata.items():
             meta = ET.SubElement(metadata_group, 'meta')
@@ -244,7 +250,7 @@ class SVGGenerator:
     def save(self, filepath: str):
         """Save SVG to file."""
         svg_string = self.to_string(pretty=True)
-        
+
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(svg_string)
     
@@ -263,15 +269,16 @@ class SVGGenerator:
         # Calculate zoomed dimensions
         zoomed_width = self.width / zoom_factor
         zoomed_height = self.height / zoom_factor
-        
-        # Calculate top-left corner to center the zoom
+
+        # Calculate top-left corner so that the viewBox is centered on the
+        # requested point.
         x = (center_x * self.width) - (zoomed_width / 2)
         y = (center_y * self.height) - (zoomed_height / 2)
-        
-        # Clamp to bounds
+
+        # Clamp to bounds to avoid panning outside the canvas.
         x = max(0, min(x, self.width - zoomed_width))
         y = max(0, min(y, self.height - zoomed_height))
-        
+
         return f"{x} {y} {zoomed_width} {zoomed_height}"
     
     def create_zoomed_version(self, zoom_factor: float, center_x: float, center_y: float) -> str:
@@ -286,13 +293,13 @@ class SVGGenerator:
         Returns:
             Zoomed SVG as string
         """
-        # Create a copy of the SVG root
+        # Create a copy of the SVG root so we don't mutate the original
         zoomed_svg = ET.fromstring(ET.tostring(self.svg_root))
-        
+
         # Update viewBox for zoom
         new_viewbox = self.get_viewbox_for_zoom(zoom_factor, center_x, center_y)
         zoomed_svg.set('viewBox', new_viewbox)
-        
+
         return ET.tostring(zoomed_svg, 'unicode')
 
 
@@ -300,6 +307,7 @@ class SVGWireframeConfig:
     """Configuration for SVG wireframe generation."""
     
     def __init__(self):
+        # Each dictionary below controls styling for a distinct SVG layer.
         # Construction lines configuration
         self.construction_lines = {
             'enabled': True,
@@ -339,7 +347,7 @@ class SVGWireframeConfig:
             'height': 1080
         }
         
-        # Metadata
+        # Metadata stored in the SVG <metadata> block
         self.metadata = {
             'generator': 'Wireframe Portrait Processor',
             'version': '1.0',

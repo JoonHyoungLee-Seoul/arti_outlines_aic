@@ -36,7 +36,14 @@ from svg_generator import SVGGenerator, SVGWireframeConfig
 
 @dataclass
 class HighResolutionConfig(WireframeConfig):
-    """Enhanced configuration for high-resolution processing"""
+    """Enhanced configuration for high-resolution processing
+
+    This extends :class:`WireframeConfig` with extra knobs that keep the
+    wireframe clean when generating very large images.  Most of these fields
+    control how line weights and mesh density are scaled relative to a
+    1080p baseline so that the output looks consistent from HD to print-size
+    canvases.
+    """
     
     # High-resolution settings
     target_resolution: Tuple[int, int] = (3840, 2160)  # 4K default
@@ -73,10 +80,15 @@ class HighResolutionConstructionLinesGenerator(ConstructionLinesGenerator):
         annotated = image.copy()
         height, width = image.shape[:2]
         
-        # Calculate adaptive line thickness based on resolution
+        # Scale the guideline thickness so strokes look similar across
+        # resolutions.  A 1px line at 1080p becomes thicker at 4K/8K.
         base_resolution = 1080  # HD reference
         resolution_factor = max(height, width) / base_resolution
-        thickness = max(1, int(config.construction_line_thickness * resolution_factor * config.line_thickness_scaling))
+        thickness = max(1, int(
+            config.construction_line_thickness *
+            resolution_factor *
+            config.line_thickness_scaling
+        ))
         
         colors = config.construction_line_colors
         
@@ -93,15 +105,18 @@ class HighResolutionConstructionLinesGenerator(ConstructionLinesGenerator):
                 return
                 
             if config.vector_construction_lines and len(points) > 2:
-                # Use smooth curve fitting for vector-like appearance
+                # When vector mode is on we still draw straight segments, but
+                # with heavy anti-aliasing so the result resembles a smooth
+                # Bézier curve.
                 for i in range(len(points) - 1):
                     cv2.line(annotated, points[i], points[i + 1], line_color, thickness, cv2.LINE_AA)
             else:
-                # Standard line drawing with anti-aliasing
+                # Otherwise we simply connect the points with standard lines.
                 for i in range(len(points) - 1):
                     cv2.line(annotated, points[i], points[i + 1], line_color, thickness, cv2.LINE_AA)
         
-        # Construction lines with enhanced quality
+        # List of classical portrait guidelines to render. Each tuple pairs
+        # landmark indices with the color used for that guideline.
         construction_lines = [
             ([10, 168, 4, 152], colors['vertical_center']),    # Vertical center
             ([63, 293], colors['eyebrow_line']),               # Eyebrow line
@@ -118,7 +133,7 @@ class HighResolutionConstructionLinesGenerator(ConstructionLinesGenerator):
             for idx in point_indices:
                 point = get_pixel_coords(idx)
                 if point:
-                    points.append(point)
+                    points.append(point)  # accumulate valid landmark points
             draw_smooth_line(points, line_color)
         
         return annotated
@@ -136,11 +151,14 @@ class HighResolutionMeshGenerator(MeshGenerator):
         annotated = image.copy()
         colors = config.mesh_colors
         
-        # Calculate adaptive mesh thickness
+        # Determine how thick the mesh lines should be at the current
+        # resolution.  This keeps the grid readable even on massive canvases.
         height, width = image.shape[:2]
         base_resolution = 1080
         resolution_factor = max(height, width) / base_resolution
-        mesh_thickness = max(1, int(config.mesh_thickness * resolution_factor * config.mesh_density_scaling))
+        mesh_thickness = max(1, int(
+            config.mesh_thickness * resolution_factor * config.mesh_density_scaling
+        ))
         
         for face_landmarks in detection_result.face_landmarks:
             # Convert landmarks
@@ -151,9 +169,10 @@ class HighResolutionMeshGenerator(MeshGenerator):
                 for landmark in face_landmarks
             ])
             
-            # Draw with enhanced quality settings
+            # Draw with enhanced quality settings.  We omit landmark circles so
+            # only the connections remain, producing a cleaner technical style.
             drawing_spec = mp.solutions.drawing_utils.DrawingSpec(
-                thickness=mesh_thickness, 
+                thickness=mesh_thickness,
                 circle_radius=0  # No landmark circles for clean lines
             )
             
@@ -209,10 +228,12 @@ class HighResolutionDexiNedGenerator(DexiNedGenerator):
         try:
             original_shape = image.shape
             
-            # Multi-scale processing for better quality
+            # Multi-scale processing for better quality.  By running the edge
+            # detector on several resized versions of the image and merging the
+            # results we preserve both coarse structure and tiny details.
             scales = [1.0]
             if config.enable_super_resolution:
-                scales = [0.5, 1.0, 1.5]  # Multi-scale processing
+                scales = [0.5, 1.0, 1.5]
             
             edge_results = []
             
@@ -277,8 +298,9 @@ class HighResolutionDexiNedGenerator(DexiNedGenerator):
             interpolation=cv2.INTER_LANCZOS4
         )
         
-        # Adaptive threshold based on scale
-        threshold = config.dexined_threshold * (0.8 + 0.2 * scale)  # Lower threshold for smaller scales
+        # Slightly relax the threshold when working at smaller scales so thin
+        # lines are not lost after resizing.
+        threshold = config.dexined_threshold * (0.8 + 0.2 * scale)
         edge_binary = (edge_resized > threshold).astype(np.uint8) * 255
         
         # Create high-quality edge image
@@ -294,15 +316,16 @@ class HighResolutionDexiNedGenerator(DexiNedGenerator):
         weights = [0.3, 0.4, 0.3]  # Emphasize 1.0 scale
         
         combined = np.ones_like(edge_results[0]) * 255  # Start with white
-        
+
         for i, (edges, weight) in enumerate(zip(edge_results, weights)):
-            # Find edge pixels (non-white)
+            # Any pixel that isn't nearly white is treated as part of an edge.
             edge_mask = np.any(edges < 250, axis=2)
-            
-            # Weighted blending
+
+            # Blend the current scale's edges over the accumulated result. This
+            # lets higher-resolution passes reinforce details from lower ones.
             alpha = weight
             combined[edge_mask] = (
-                alpha * edges[edge_mask] + 
+                alpha * edges[edge_mask] +
                 (1 - alpha) * combined[edge_mask]
             ).astype(np.uint8)
         
@@ -319,11 +342,10 @@ class HighResolutionDexiNedGenerator(DexiNedGenerator):
         
         # Morphological operations for cleaner edges
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        
-        # Close small gaps
+
+        # First close tiny gaps between edge segments, then smooth out any
+        # remaining noise for a cleaner final outline.
         gray = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
-        
-        # Remove noise
         gray = cv2.medianBlur(gray, 3)
         
         # Convert back to color
@@ -357,10 +379,13 @@ class HighResolutionWireframeProcessor(WireframePortraitProcessor):
         target_width, target_height = self.config.target_resolution
         base_resolution = 1920 * 1080  # HD reference
         target_total = target_width * target_height
-        
+
+        # Compare total pixel count with HD and derive a square-root factor so
+        # scaling grows proportionally with image dimensions.
         resolution_factor = math.sqrt(target_total / base_resolution)
-        
-        # Update scaling factors
+
+        # Update scaling factors within sane bounds to avoid overly thick lines
+        # when jumping from small to extremely large resolutions.
         self.config.line_thickness_scaling = min(3.0, max(0.5, resolution_factor))
         self.config.mesh_density_scaling = min(2.0, max(0.5, resolution_factor * 0.8))
     
@@ -376,7 +401,9 @@ class HighResolutionWireframeProcessor(WireframePortraitProcessor):
         target_height, target_width = self.config.target_resolution
         
         if max(original_shape) < max(target_height, target_width):
-            # Upscale image to target resolution maintaining aspect ratio
+            # If the source image is smaller than the requested resolution,
+            # enlarge it first so subsequent drawing steps have enough pixels to
+            # work with.
             image = self._upscale_image(image, (target_width, target_height))
             print(f"Upscaled image from {original_shape} to {image.shape[:2]}")
         
@@ -405,10 +432,11 @@ class HighResolutionWireframeProcessor(WireframePortraitProcessor):
             new_height = target_height
             new_width = int(target_height * aspect_ratio)
         
-        # Upscale using high-quality interpolation
+        # Upscale using Lanczos interpolation which preserves edges better than
+        # simpler algorithms like bilinear.
         upscaled = cv2.resize(
-            image, 
-            (new_width, new_height), 
+            image,
+            (new_width, new_height),
             interpolation=cv2.INTER_LANCZOS4
         )
         
@@ -433,6 +461,8 @@ class HighResolutionWireframeProcessor(WireframePortraitProcessor):
         
         # Start with high-resolution blank canvas
         height, width = image.shape[:2]
+        # Work on a pure white canvas so only the generated lines are visible
+        # in the final result.
         current_image = np.ones((height, width, 3), dtype=np.uint8) * 255
         
         # Apply features with high-resolution processing
@@ -450,6 +480,8 @@ class HighResolutionWireframeProcessor(WireframePortraitProcessor):
         
         if self.config.enable_dexined_outline and self.dexined_generator:
             outline_image = self.dexined_generator.generate_outline(image, self.config)
+            # Overlay only the extracted lines, ignoring the white background
+            # produced by DexiNed.
             current_image = self._add_lines_to_canvas(current_image, outline_image)
             results['dexined_outline'] = current_image.copy()
         
@@ -475,25 +507,25 @@ class HighResolutionWireframeProcessor(WireframePortraitProcessor):
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         if len(image.shape) == 3 and image.shape[2] == 4:  # RGBA
-            # Use high-quality PNG compression
+            # Use high-quality PNG compression. OpenCV expects BGRA ordering.
             bgra_image = cv2.cvtColor(image, cv2.COLOR_RGBA2BGRA)
-            
-            # PNG compression settings for high quality
+
+            # Compression level 1 keeps edges crisp at the expense of file size.
             compression_params = [
-                cv2.IMWRITE_PNG_COMPRESSION, 1,  # Low compression for quality
+                cv2.IMWRITE_PNG_COMPRESSION, 1,
                 cv2.IMWRITE_PNG_STRATEGY, cv2.IMWRITE_PNG_STRATEGY_DEFAULT
             ]
-            
+
             success = cv2.imwrite(output_path, bgra_image, compression_params)
         else:  # RGB
             bgr_image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            
-            # Determine format based on extension
+
+            # Determine format based on extension so callers can request JPEG or PNG.
             if output_path.lower().endswith('.jpg') or output_path.lower().endswith('.jpeg'):
                 compression_params = [cv2.IMWRITE_JPEG_QUALITY, 98]  # High quality JPEG
             else:
                 compression_params = [cv2.IMWRITE_PNG_COMPRESSION, 1]
-            
+
             success = cv2.imwrite(output_path, bgr_image, compression_params)
         
         if success:
@@ -502,7 +534,11 @@ class HighResolutionWireframeProcessor(WireframePortraitProcessor):
             print(f"Failed to save wireframe to: {output_path}")
 
 def create_high_resolution_presets() -> Dict[str, HighResolutionConfig]:
-    """Create high-resolution preset configurations"""
+    """Create high-resolution preset configurations.
+
+    Combines the base wireframe presets with several output resolutions so
+    users can request options like ``beginner_4K`` or ``advanced_8K``.
+    """
     base_presets = create_preset_configs()
     hr_presets = {}
     
@@ -518,25 +554,25 @@ def create_high_resolution_presets() -> Dict[str, HighResolutionConfig]:
     for res_name, resolution in resolutions.items():
         for preset_name, base_config in base_presets.items():
             config_name = f"{preset_name}_{res_name}"
-            
+
             hr_config = HighResolutionConfig(
-                # Copy base settings
+                # Copy base settings from the base preset
                 enable_construction_lines=base_config.enable_construction_lines,
                 enable_mesh=base_config.enable_mesh,
                 enable_dexined_outline=base_config.enable_dexined_outline,
-                
+
                 # High-resolution settings
                 target_resolution=resolution,
                 enable_super_resolution=True,
                 vector_construction_lines=True,
                 enable_edge_enhancement=True,
-                
+
                 # Adaptive settings based on resolution
                 tile_processing=resolution[0] * resolution[1] > 3840 * 2160,  # Enable for >4K
                 output_format="rgba",
                 background_removal_method="lines_only"
             )
-            
+
             hr_presets[config_name] = hr_config
     
     return hr_presets
