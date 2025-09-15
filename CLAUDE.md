@@ -23,6 +23,7 @@ This is a Portrait Outline Generator project that creates artistic wireframe por
 - **✅ SVG Export System** - Scalable vector graphics export with infinite zoom capability, web-ready format for frontend integration
 - **✅ High-Resolution Support** - 4K, 8K, and print quality (A4 300DPI) wireframe processing with adaptive scaling
 - **✅ MediaPipe Pose Landmarker Integration** - Body skeleton detection with 33 pose landmarks, filtered to exclude face/hand details (landmarks 0-10, 17-22)
+- **✅ Background Merge System** - Intelligent background image composition with adjustable transparency (0-100% scale), automatic image matching, and seamless integration with all wireframe features
 
 **Active Components:**
 - **Wireframe Portrait Processor** (`image_processing/wireframe_portrait_processor.py`) - Main system for generating wireframe portraits with configurable features
@@ -82,6 +83,18 @@ python wireframe_portrait_processor.py input.jpg --construction-lines --mesh --d
 
 # Pose landmarks only for body skeleton analysis
 python wireframe_portrait_processor.py input.jpg --pose-landmarks -o skeleton.png
+
+# Background merge with independent foreground/background transparency control (ENHANCED FEATURE)
+python wireframe_portrait_processor.py input.jpg --preset intermediate --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 --background-transparency 50 -o merged.png
+
+# Creative drawing practice mode (white silhouette for tracing)
+python wireframe_portrait_processor.py input.jpg --preset intermediate --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 0 --background-transparency 100 -o drawing_practice.png
+
+# Wireframe only (no background)
+python wireframe_portrait_processor.py input.jpg --preset intermediate --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 --background-transparency 0 -o wireframe_only.png
+
+# Subtle wireframe overlay (semi-transparent blend)
+python wireframe_portrait_processor.py input.jpg --preset beginner --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 30 --background-transparency 80 -o subtle_overlay.png
 ```
 
 ### Data Operations
@@ -116,12 +129,14 @@ The wireframe portrait generation system follows a modular, feature-based archit
 4. **Face Mesh** (Detailed wireframe contours using MediaPipe connections)
 5. **Pose Skeleton** (Body structure wireframes excluding face and hand details)
 6. **Edge Detection** (DexiNed AI-powered outline generation with ROCm acceleration)
-7. **Vector Export** (SVG generation with infinite scalability and web integration)
-8. **High-Resolution Scaling** (Adaptive processing for 4K, 8K, and print quality)
+7. **Background Composition** (Intelligent background image matching with independent foreground/background transparency control)
+8. **Vector Export** (SVG generation with infinite scalability and web integration)
+9. **High-Resolution Scaling** (Adaptive processing for 4K, 8K, and print quality)
 
 ### 🔧 **System Components**
-- **Configurable Features**: Toggle construction lines, face mesh, pose landmarks, and outlines independently
+- **Configurable Features**: Toggle construction lines, face mesh, pose landmarks, outlines, and background merge independently
 - **Preset System**: Beginner (all features), intermediate (lines + mesh + pose), advanced (lines + pose only)
+- **Background Integration**: Intelligent image matching with independent 0-100% foreground and background transparency control
 - **Multi-Format Output**: PNG, SVG, high-resolution variants
 - **GPU Acceleration**: ROCm/CUDA support for MediaPipe and DexiNed processing
 - **Web Integration**: Standards-compliant SVG with zoom, animation, and interaction support
@@ -178,12 +193,42 @@ Portrait images are sourced from the Art Institute of Chicago API with strict fi
 - Available high-resolution images via IIIF
 - Comprehensive metadata for curatorial context
 
+## Background Merge & Transparency Control
+
+The wireframe portrait processor now supports advanced background merging with independent transparency controls for creative applications:
+
+### 🎨 **Creative Use Cases**
+
+1. **Drawing Practice Mode** (`fg=0%, bg=100%`)
+   - Produces clean background with white person silhouette for tracing
+   - Perfect for drawing practice and artistic reference
+   - Example: `--foreground-transparency 0 --background-transparency 100`
+
+2. **Wireframe Analysis Mode** (`fg=100%, bg=0%`)
+   - Shows only the wireframe overlay on transparent/black background
+   - Ideal for studying facial structure and proportions
+   - Example: `--foreground-transparency 100 --background-transparency 0`
+
+3. **Artistic Overlay Mode** (`fg=30%, bg=80%`)
+   - Subtle wireframe blend over background image
+   - Creates artistic reference with guidelines visible
+   - Example: `--foreground-transparency 30 --background-transparency 80`
+
+### 🔧 **Technical Implementation**
+
+- **Smart Masking**: Uses inverted foreground alpha channel to create proper background masks
+- **White Fill**: Person areas are filled with white (255,255,255) for optimal drawing contrast
+- **Independent Control**: Foreground and background transparency work independently (0-100% each)
+- **Automatic Matching**: Intelligently matches foreground/background image pairs by filename
+
 ## Current Status & Future Enhancements
 
 ### ✅ **Production Ready**
 - Complete wireframe portrait generation system with preset configurations
 - SVG export with infinite scalability for web/mobile applications
 - **Enhanced DexiNed SVG Quality**: Production-grade edge outline processing with 300-700+ contours
+- **Independent Transparency Control**: Separate 0-100% transparency controls for foreground and background elements
+- **Creative Drawing Modes**: White masking for drawing practice, subtle overlays for artistic reference
 - High-resolution processing (4K, 8K, print quality) with adaptive scaling
 - GPU-accelerated processing with ROCm/CUDA support
 - Landmark-accurate construction lines based on MediaPipe face detection

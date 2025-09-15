@@ -100,6 +100,13 @@ class WireframeConfig:
     enable_svg_export: bool = False
     svg_output_path: str = ""
 
+    # Background merge settings
+    enable_background_merge: bool = False
+    background_directory: str = ""
+    foreground_directory: str = ""  # Optional foreground directory for creative control
+    foreground_transparency: int = 100  # 0-100 scale (0=transparent, 100=opaque)
+    background_transparency: int = 50  # 0-100 scale (0=transparent, 100=opaque)
+
 class ConstructionLinesGenerator:
     """Generates portrait construction lines based on MediaPipe landmarks"""
     
@@ -511,6 +518,208 @@ class PoseLandmarkerGenerator:
         return annotated
 
 
+class BackgroundMerger:
+    """Merges foreground wireframe with background images at adjustable transparency"""
+
+    def __init__(self, config: WireframeConfig):
+        self.config = config
+
+    def find_matching_background(self, input_image_path: str) -> Optional[str]:
+        """
+        Find matching background image for the given input image
+
+        Args:
+            input_image_path: Path to the input foreground image
+
+        Returns:
+            Path to matching background image or None if not found
+        """
+        if not self.config.background_directory or not os.path.exists(self.config.background_directory):
+            return None
+
+        # Extract base filename without extension
+        input_filename = os.path.splitext(os.path.basename(input_image_path))[0]
+
+        # Remove common suffixes like '_fg' to find base name
+        base_name = input_filename.replace('_fg', '')
+
+        # Look for matching background file
+        for bg_file in os.listdir(self.config.background_directory):
+            if bg_file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                bg_basename = os.path.splitext(bg_file)[0]
+
+                # Check for exact match or background pattern
+                if (base_name in bg_basename or
+                    bg_basename.replace('_bg', '') == base_name or
+                    bg_basename == base_name):
+                    return os.path.join(self.config.background_directory, bg_file)
+
+        # If no specific match, return first available background
+        bg_files = [f for f in os.listdir(self.config.background_directory)
+                   if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        if bg_files:
+            print(f"Warning: No matching background found for {input_filename}, using {bg_files[0]}")
+            return os.path.join(self.config.background_directory, bg_files[0])
+
+        return None
+
+    def find_matching_foreground(self, input_image_path: str) -> Optional[str]:
+        """
+        Find matching foreground image when using separate foreground directory
+
+        Args:
+            input_image_path: Path to the input image
+
+        Returns:
+            Path to matching foreground image or None if not found
+        """
+        if not self.config.foreground_directory or not os.path.exists(self.config.foreground_directory):
+            return None
+
+        # Extract base filename without extension
+        input_filename = os.path.splitext(os.path.basename(input_image_path))[0]
+
+        # Remove common suffixes to find base name
+        base_name = input_filename.replace('_fg', '').replace('_bg', '')
+
+        # Look for matching foreground file
+        for fg_file in os.listdir(self.config.foreground_directory):
+            if fg_file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                fg_basename = os.path.splitext(fg_file)[0]
+
+                # Check for exact match or foreground pattern
+                if (base_name in fg_basename or
+                    fg_basename.replace('_fg', '') == base_name or
+                    fg_basename == base_name):
+                    return os.path.join(self.config.foreground_directory, fg_file)
+
+        # If no specific match, return first available foreground
+        fg_files = [f for f in os.listdir(self.config.foreground_directory)
+                   if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        if fg_files:
+            print(f"Warning: No matching foreground found for {input_filename}, using {fg_files[0]}")
+            return os.path.join(self.config.foreground_directory, fg_files[0])
+
+        return None
+
+    def merge_with_background(self, foreground: np.ndarray, background_path: str, foreground_path: Optional[str] = None) -> np.ndarray:
+        """
+        Merge foreground wireframe with background image using independent transparency controls
+
+        Args:
+            foreground: Generated wireframe image (RGB or RGBA)
+            background_path: Path to background image
+            foreground_path: Optional path to separate foreground image for creative control
+
+        Returns:
+            Merged image with independent transparency controls
+        """
+        if not background_path or not os.path.exists(background_path):
+            print(f"Background image not found: {background_path}")
+            return foreground
+
+        try:
+            # Load background image
+            background = cv2.imread(background_path, cv2.IMREAD_UNCHANGED)
+            if background is None:
+                print(f"Could not load background image: {background_path}")
+                return foreground
+
+            # Convert background to RGB
+            if len(background.shape) == 3:
+                if background.shape[2] == 4:  # BGRA
+                    background_rgb = cv2.cvtColor(background, cv2.COLOR_BGRA2RGB)
+                elif background.shape[2] == 3:  # BGR
+                    background_rgb = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
+                else:
+                    background_rgb = background
+            else:
+                # Grayscale
+                background_rgb = cv2.cvtColor(background, cv2.COLOR_GRAY2RGB)
+
+            # Use foreground alpha mask to remove person from background
+            # Since bg.png still contains the person, we need to remove it using fg alpha mask
+            bg_alpha_mask = None  # Will be set after foreground is loaded
+
+            # Load separate foreground image if specified for creative control
+            # When foreground_path is provided, use it INSTEAD of the wireframe
+            if foreground_path and os.path.exists(foreground_path):
+                fg_loaded = cv2.imread(foreground_path, cv2.IMREAD_UNCHANGED)
+                if fg_loaded is not None:
+                    # Convert to RGBA or RGB but preserve alpha channel if present
+                    if len(fg_loaded.shape) == 3:
+                        if fg_loaded.shape[2] == 4:  # BGRA
+                            foreground = cv2.cvtColor(fg_loaded, cv2.COLOR_BGRA2RGBA)
+                        elif fg_loaded.shape[2] == 3:  # BGR
+                            foreground = cv2.cvtColor(fg_loaded, cv2.COLOR_BGR2RGB)
+                        else:
+                            foreground = fg_loaded
+                    else:
+                        # Grayscale
+                        foreground = cv2.cvtColor(fg_loaded, cv2.COLOR_GRAY2RGB)
+                    # When foreground_path exists, use it instead of the wireframe
+                    # This ensures fg=0% actually makes foreground disappear
+                else:
+                    print(f"Could not load foreground file: {foreground_path}")
+
+            # Get dimensions and resize both images to match
+            fg_height, fg_width = foreground.shape[:2]
+            background_resized = cv2.resize(background_rgb, (fg_width, fg_height))
+
+            # Handle foreground format and extract proper alpha mask
+            if len(foreground.shape) == 3 and foreground.shape[2] == 4:
+                # RGBA foreground - use existing alpha channel
+                foreground_rgb = foreground[:, :, :3]
+                fg_alpha_channel = foreground[:, :, 3] / 255.0
+            else:
+                # RGB foreground - create alpha mask for non-white areas
+                foreground_rgb = foreground
+                # Create alpha mask: transparent for white areas, opaque for colored areas
+                white_threshold = 250
+                white_mask = np.all(foreground_rgb >= white_threshold, axis=2)
+                fg_alpha_channel = np.ones((fg_height, fg_width), dtype=np.float32)
+                fg_alpha_channel[white_mask] = 0.0
+
+            # Create background alpha mask using inverted foreground alpha
+            # Where foreground has person (alpha=1) → background should be transparent (alpha=0)
+            # Where foreground is transparent (alpha=0) → background should be visible (alpha=1)
+            bg_alpha_mask = 1.0 - fg_alpha_channel  # Invert the foreground mask
+
+            # Apply transparency settings (0-100 scale)
+            fg_alpha = self.config.foreground_transparency / 100.0  # 0=transparent, 1=opaque
+            bg_alpha = self.config.background_transparency / 100.0   # 0=transparent, 1=opaque
+
+            # Create result image
+            result = np.zeros_like(foreground_rgb, dtype=np.float32)
+
+            for c in range(3):  # RGB channels
+                # Calculate contributions with proper transparency handling
+                fg_contribution = foreground_rgb[:, :, c].astype(np.float32) * fg_alpha_channel * fg_alpha
+                # Apply background alpha mask to prevent person areas from showing
+                bg_contribution = background_resized[:, :, c].astype(np.float32) * bg_alpha * bg_alpha_mask
+
+                # Alpha blending for independent transparency control
+                effective_fg_alpha = fg_alpha_channel * fg_alpha
+
+                # Base blending
+                result[:, :, c] = fg_contribution + bg_contribution * (1 - effective_fg_alpha)
+
+                # WHITE MASKING: Fill masked areas (where person was removed) with white
+                # Where bg_alpha_mask is 0 (person was removed), fill with white (255)
+                white_mask_areas = bg_alpha_mask == 0.0
+                result[:, :, c][white_mask_areas] = 255.0
+
+            # Clip to valid range and convert back to uint8
+            result = np.clip(result, 0, 255).astype(np.uint8)
+
+            print(f"Images merged - Foreground: {self.config.foreground_transparency}%, Background: {self.config.background_transparency}%")
+            return result
+
+        except Exception as e:
+            print(f"Error merging images: {e}")
+            return foreground
+
+
 class BackgroundRemover:
     """Removes background to create transparent wireframe"""
     
@@ -637,12 +846,16 @@ class WireframePortraitProcessor:
         self.mesh_generator = MeshGenerator()
         self.dexined_generator = None
         self.pose_landmarker_generator = None
-        
+        self.background_merger = None
+
         if config.enable_dexined_outline and config.dexined_model_path:
             self.dexined_generator = DexiNedGenerator(config.dexined_model_path)
-            
+
         if config.enable_pose_landmarks and config.pose_model_path:
             self.pose_landmarker_generator = PoseLandmarkerGenerator(config.pose_model_path)
+
+        if config.enable_background_merge:
+            self.background_merger = BackgroundMerger(config)
         
         # Initialize MediaPipe
         self.mp_face_landmarker = mp.solutions.face_mesh
@@ -729,7 +942,20 @@ class WireframePortraitProcessor:
                     current_image, pose_landmarks, self.config
                 )
                 results['pose_landmarks'] = current_image.copy()
-        
+
+        # Apply background merge if enabled
+        if self.config.enable_background_merge and self.background_merger:
+            background_path = self.background_merger.find_matching_background(image_path)
+            foreground_path = self.background_merger.find_matching_foreground(image_path)
+
+            if background_path:
+                current_image = self.background_merger.merge_with_background(
+                    current_image, background_path, foreground_path
+                )
+                results['background_merged'] = current_image.copy()
+            else:
+                print("Warning: Background merge enabled but no matching background found")
+
         # Apply background removal if needed to produce RGBA output
         if self.config.output_format == "rgba":
             rgba_image = BackgroundRemover.create_wireframe_rgba(
@@ -1118,7 +1344,25 @@ def main():
     parser.add_argument('--svg', action='store_true',
                        help='Enable SVG export (in addition to raster output)')
     parser.add_argument('--svg-output', help='SVG output file path')
-    
+
+    # Background merge options
+    parser.add_argument('--background-merge', action='store_true',
+                       help='Enable background merge with independent transparency controls')
+    parser.add_argument('--background-dir',
+                       default='/home/joonhyoung-lee/바탕화면/arti_outlines/image_processing/out_sample/clipped_images_bg',
+                       help='Directory containing background images')
+    parser.add_argument('--foreground-dir',
+                       default='/home/joonhyoung-lee/바탕화면/arti_outlines/image_processing/out_sample/clipped_images_fg',
+                       help='Directory containing foreground images for creative control')
+    parser.add_argument('--foreground-transparency', type=int, default=100,
+                       help='Foreground transparency level (0-100, where 0=transparent, 100=opaque)')
+    parser.add_argument('--background-transparency', type=int, default=50,
+                       help='Background transparency level (0-100, where 0=transparent, 100=opaque)')
+
+    # Legacy compatibility (deprecated)
+    parser.add_argument('--background-opacity', type=int,
+                       help='Deprecated: use --background-transparency instead')
+
     args = parser.parse_args()
     
     # Create configuration
@@ -1129,7 +1373,24 @@ def main():
         config.output_format = args.output_format  # Override preset output format
         config.enable_svg_export = args.svg or args.output_format == 'svg'
         config.svg_output_path = args.svg_output or ""
+        # Override background merge settings
+        config.enable_background_merge = args.background_merge
+        config.background_directory = args.background_dir
+        config.foreground_directory = args.foreground_dir
+        config.foreground_transparency = args.foreground_transparency
+        config.background_transparency = args.background_transparency
+
+        # Handle legacy compatibility
+        if args.background_opacity is not None:
+            print("Warning: --background-opacity is deprecated, use --background-transparency instead")
+            config.background_transparency = args.background_opacity
     else:
+        # Handle legacy compatibility for background opacity
+        bg_transparency = args.background_transparency
+        if args.background_opacity is not None:
+            print("Warning: --background-opacity is deprecated, use --background-transparency instead")
+            bg_transparency = args.background_opacity
+
         config = WireframeConfig(
             enable_construction_lines=args.construction_lines,
             enable_mesh=args.mesh,
@@ -1138,7 +1399,12 @@ def main():
             output_format=args.output_format,
             background_removal_method=args.background_removal,
             enable_svg_export=args.svg or args.output_format == 'svg',
-            svg_output_path=args.svg_output or ""
+            svg_output_path=args.svg_output or "",
+            enable_background_merge=args.background_merge,
+            background_directory=args.background_dir,
+            foreground_directory=args.foreground_dir,
+            foreground_transparency=args.foreground_transparency,
+            background_transparency=bg_transparency
         )
     
     # Set DexiNed model path - use absolute path
@@ -1167,6 +1433,7 @@ def main():
         print(f"  Face Mesh: {'✓' if config.enable_mesh else '✗'}")
         print(f"  DexiNed Outline: {'✓' if config.enable_dexined_outline else '✗'}")
         print(f"  Pose Landmarks: {'✓' if config.enable_pose_landmarks else '✗'}")
+        print(f"  Background Merge: {'✓' if config.enable_background_merge else '✗'}")
     else:
         print("Wireframe processing failed!")
 
