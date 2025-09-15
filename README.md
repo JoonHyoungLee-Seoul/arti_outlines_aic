@@ -19,7 +19,8 @@ A complete system for generating artistic wireframe portraits from artworks usin
 ### 🎨 **Wireframe Components**
 - **Construction Lines**: Classical portrait guidelines based on facial landmarks
 - **Face Mesh**: Detailed MediaPipe wireframe contours (468 facial points)
-- **Edge Outlines**: AI-powered DexiNed edge detection with GPU acceleration
+- **Edge Outlines**: AI-powered DexiNed edge detection with enhanced SVG quality and GPU acceleration
+- **Pose Landmarks**: MediaPipe body skeleton with 33 pose points (excludes face/hand details)
 
 ### 🌐 **Web Integration**
 - **Infinite Scalability**: Vector SVG format perfect for zoom functionality
@@ -72,14 +73,15 @@ python high_resolution_wireframe_processor.py input.jpg --target-resolution 3840
 
 ```bash
 # Available presets
---preset beginner      # All features: construction lines + face mesh + outlines
---preset intermediate  # Lines + mesh (recommended for learning)
---preset advanced     # Construction lines only (for experienced artists)
+--preset beginner      # All features: construction lines + face mesh + outlines + pose landmarks
+--preset intermediate  # Lines + mesh + pose landmarks (recommended for learning)
+--preset advanced     # Construction lines + pose landmarks (for experienced artists)
 
 # Custom feature control
 --construction-lines   # Enable facial guidelines
 --mesh                # Enable detailed face mesh
 --dexined            # Enable AI edge detection
+--pose-landmarks      # Enable body skeleton (shoulders, torso, arms, legs)
 
 # Output formats
 --output-format rgba  # PNG with transparency (default)
@@ -98,6 +100,7 @@ config = WireframeConfig(
     enable_construction_lines=True,
     enable_mesh=True,
     enable_dexined_outline=False,
+    enable_pose_landmarks=True,
     enable_svg_export=True,
     output_format="rgba"
 )
@@ -117,12 +120,16 @@ svg_content = results.get('svg_content')
 ```mermaid
 graph TD
     A[Input Portrait] --> B[MediaPipe Face Detection]
+    A --> K[MediaPipe Pose Detection]
     B --> C[Landmark Extraction]
+    K --> L[Pose Landmark Extraction]
     C --> D[Construction Lines Generator]
     C --> E[Face Mesh Generator]
+    L --> M[Pose Skeleton Generator]
     A --> F[DexiNed Edge Detection]
     D --> G[Wireframe Compositor]
     E --> G
+    M --> G
     F --> G
     G --> H[PNG Output]
     G --> I[SVG Generator]
@@ -200,18 +207,20 @@ svg_config.canvas['background_color'] = 'transparent'
 
 ### File Size Comparison
 
-| Format | Resolution | File Size | Scalability |
-|--------|------------|-----------|-------------|
-| PNG | 1920×1080 | ~8KB | Fixed |
-| PNG | 3840×2160 | ~32KB | Fixed |
-| SVG | Vector | ~1-5KB | Infinite |
-| SVG + Mesh | Vector | ~50KB | Infinite |
+| Format | Resolution | File Size | Scalability | DexiNed Quality |
+|--------|------------|-----------|-------------|-----------------|
+| PNG | 1920×1080 | ~8KB | Fixed | High |
+| PNG | 3840×2160 | ~32KB | Fixed | High |
+| SVG | Vector | ~1-5KB | Infinite | Basic |
+| SVG + Mesh | Vector | ~50KB | Infinite | Enhanced |
+| SVG + DexiNed | Vector | ~300-500KB | Infinite | **Production Quality** |
 
 ### Processing Speed
 
 - **Face Detection**: ~200ms (GPU) vs ~800ms (CPU)
 - **Wireframe Generation**: ~100ms for standard resolution
-- **SVG Export**: ~50ms additional overhead
+- **SVG Export**: ~50ms additional overhead (basic) / ~200ms (with DexiNed)
+- **DexiNed Processing**: ~1-2s for outline generation + contour extraction
 - **4K Processing**: ~500ms with adaptive scaling
 
 ## 🌐 Frontend Integration Examples

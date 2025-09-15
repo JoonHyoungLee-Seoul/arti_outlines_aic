@@ -16,6 +16,7 @@ import sys
 import cv2
 import numpy as np
 import mediapipe as mp
+import mediapipe.tasks as mp_tasks
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Union, Any
 from dataclasses import dataclass, field
@@ -26,6 +27,7 @@ from datetime import datetime
 
 # Import SVG generator
 from svg_generator import SVGGenerator, SVGWireframeConfig
+
 
 # Add DexiNed to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'DexiNed'))
@@ -44,6 +46,7 @@ class FeatureType(Enum):
     CONSTRUCTION_LINES = "construction_lines"
     MESH = "mesh"
     DEXINED_OUTLINE = "dexined_outline"
+    POSE_LANDMARKS = "pose_landmarks"
 
 @dataclass
 class WireframeConfig:
@@ -52,6 +55,7 @@ class WireframeConfig:
     enable_construction_lines: bool = True
     enable_mesh: bool = False
     enable_dexined_outline: bool = False
+    enable_pose_landmarks: bool = False
     
     # Construction lines settings
     construction_line_thickness: int = 2
@@ -76,6 +80,16 @@ class WireframeConfig:
     dexined_threshold: float = 0.5
     dexined_line_thickness: int = 1
     dexined_color: Tuple[int, int, int] = (0, 0, 0)  # Black
+    
+    # Pose landmarks settings
+    pose_model_path: str = ""  # Path to pose_landmarker.task file
+    pose_detection_confidence: float = 0.5
+    pose_line_thickness: int = 2
+    pose_point_radius: int = 4
+    pose_colors: Dict[str, Tuple[int, int, int]] = field(default_factory=lambda: {
+        'body_connections': (255, 165, 0),   # Orange - body skeleton
+        'landmark_points': (255, 0, 0),      # Red - landmark points
+    })
     
     # Output settings
     output_format: str = "rgba"  # "rgba", "rgb", "lines_only", "svg"
@@ -289,7 +303,6 @@ class DexiNedGenerator:
             
             # Convert edge map to RGB image
             edge_image = self._postprocess_edges(edge_map, image.shape, config)
-            
             return edge_image
             
         except Exception as e:
@@ -349,6 +362,154 @@ class DexiNedGenerator:
         edge_rgb[edges > 0] = config.dexined_color
         
         return edge_rgb
+    
+
+class PoseLandmarkerGenerator:
+    """Generates pose landmarks using MediaPipe Pose Landmarker"""
+    
+    def __init__(self, model_path: str = ""):
+        self.detector = None
+        self.model_path = model_path
+        
+        # Excluded landmarks (face/hands details)
+        self.excluded_landmarks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22}
+        
+        # Pose connections for drawing skeleton (filtered to exclude face/hands)
+        self.pose_connections = [
+            # Torso connections
+            (11, 12),  # left shoulder to right shoulder
+            (11, 23),  # left shoulder to left hip
+            (12, 24),  # right shoulder to right hip
+            (23, 24),  # left hip to right hip
+            
+            # Left arm connections
+            (11, 13),  # left shoulder to left elbow
+            (13, 15),  # left elbow to left wrist
+            
+            # Right arm connections  
+            (12, 14),  # right shoulder to right elbow
+            (14, 16),  # right elbow to right wrist
+            
+            # Left leg connections
+            (23, 25),  # left hip to left knee
+            (25, 27),  # left knee to left ankle
+            (27, 29),  # left ankle to left heel
+            (27, 31),  # left ankle to left foot index
+            
+            # Right leg connections
+            (24, 26),  # right hip to right knee
+            (26, 28),  # right knee to right ankle
+            (28, 30),  # right ankle to right heel
+            (28, 32),  # right ankle to right foot index
+        ]
+        
+        if model_path and os.path.exists(model_path):
+            self._load_model()
+    
+    def _load_model(self):
+        """Load MediaPipe Pose Landmarker model"""
+        try:
+            base_options = mp_tasks.BaseOptions(model_asset_path=self.model_path)
+            options = mp_tasks.vision.PoseLandmarkerOptions(
+                base_options=base_options,
+                output_segmentation_masks=False,
+                running_mode=mp_tasks.vision.RunningMode.IMAGE
+            )
+            self.detector = mp_tasks.vision.PoseLandmarker.create_from_options(options)
+        except Exception as e:
+            print(f"Error loading Pose Landmarker model: {e}")
+            self.detector = None
+    
+    def detect_pose_landmarks(self, image: np.ndarray, config: WireframeConfig) -> Optional[List]:
+        """
+        Detect pose landmarks from image
+        
+        Args:
+            image: Input RGB image
+            config: Wireframe configuration
+            
+        Returns:
+            List of pose landmarks or None if detection fails
+        """
+        if self.detector is None:
+            return None
+            
+        try:
+            # Convert numpy array to MediaPipe Image
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
+            
+            # Detect pose landmarks
+            detection_result = self.detector.detect(mp_image)
+            
+            if detection_result.pose_landmarks:
+                return detection_result.pose_landmarks[0]  # Return first detected pose
+            else:
+                return None
+                
+        except Exception as e:
+            print(f"Error in pose landmark detection: {e}")
+            return None
+    
+    def draw_pose_landmarks(self, image: np.ndarray, landmarks: List, config: WireframeConfig) -> np.ndarray:
+        """
+        Draw pose landmarks and connections on image
+        
+        Args:
+            image: Input image
+            landmarks: Pose landmarks
+            config: Wireframe configuration
+            
+        Returns:
+            Annotated image with pose landmarks
+        """
+        annotated = image.copy()
+        height, width = image.shape[:2]
+        
+        # Draw connections (skeleton)
+        for connection in self.pose_connections:
+            start_idx, end_idx = connection
+            
+            # Skip if landmarks are excluded
+            if start_idx in self.excluded_landmarks or end_idx in self.excluded_landmarks:
+                continue
+                
+            if start_idx < len(landmarks) and end_idx < len(landmarks):
+                start_landmark = landmarks[start_idx]
+                end_landmark = landmarks[end_idx]
+                
+                # Convert normalized coordinates to pixel coordinates
+                start_point = (
+                    int(start_landmark.x * width),
+                    int(start_landmark.y * height)
+                )
+                end_point = (
+                    int(end_landmark.x * width),
+                    int(end_landmark.y * height)
+                )
+                
+                # Draw connection line
+                cv2.line(annotated, start_point, end_point, 
+                        config.pose_colors['body_connections'], 
+                        config.pose_line_thickness)
+        
+        # Draw landmark points
+        for idx, landmark in enumerate(landmarks):
+            # Skip excluded landmarks
+            if idx in self.excluded_landmarks:
+                continue
+                
+            # Convert normalized coordinates to pixel coordinates
+            point = (
+                int(landmark.x * width),
+                int(landmark.y * height)
+            )
+            
+            # Draw landmark point
+            cv2.circle(annotated, point, config.pose_point_radius, 
+                      config.pose_colors['landmark_points'], -1)
+        
+        return annotated
+
 
 class BackgroundRemover:
     """Removes background to create transparent wireframe"""
@@ -475,9 +636,13 @@ class WireframePortraitProcessor:
         self.construction_generator = ConstructionLinesGenerator()
         self.mesh_generator = MeshGenerator()
         self.dexined_generator = None
+        self.pose_landmarker_generator = None
         
         if config.enable_dexined_outline and config.dexined_model_path:
             self.dexined_generator = DexiNedGenerator(config.dexined_model_path)
+            
+        if config.enable_pose_landmarks and config.pose_model_path:
+            self.pose_landmarker_generator = PoseLandmarkerGenerator(config.pose_model_path)
         
         # Initialize MediaPipe
         self.mp_face_landmarker = mp.solutions.face_mesh
@@ -556,6 +721,14 @@ class WireframePortraitProcessor:
             # Add outline to canvas (only the lines)
             current_image = self._add_lines_to_canvas(current_image, outline_image)
             results['dexined_outline'] = current_image.copy()
+        
+        if self.config.enable_pose_landmarks and self.pose_landmarker_generator:
+            pose_landmarks = self.pose_landmarker_generator.detect_pose_landmarks(image, self.config)
+            if pose_landmarks:
+                current_image = self.pose_landmarker_generator.draw_pose_landmarks(
+                    current_image, pose_landmarks, self.config
+                )
+                results['pose_landmarks'] = current_image.copy()
         
         # Apply background removal if needed to produce RGBA output
         if self.config.output_format == "rgba":
@@ -745,27 +918,73 @@ class WireframePortraitProcessor:
             svg_generator.add_dexined_outline(contours, dexined_config)
             metadata['features'].append('dexined_outline')
         
+        # Add pose landmarks if enabled
+        if self.config.enable_pose_landmarks and self.pose_landmarker_generator:
+            pose_landmarks = self.pose_landmarker_generator.detect_pose_landmarks(image, self.config)
+            if pose_landmarks:
+                # Convert pose landmarks to format compatible with SVG generator
+                pose_landmark_coords = []
+                for landmark in pose_landmarks:
+                    pose_landmark_coords.append([landmark.x, landmark.y, landmark.z])
+                pose_landmark_array = np.array(pose_landmark_coords)
+                
+                pose_config = {
+                    'line_color': f'rgb{self.config.pose_colors["body_connections"]}',
+                    'point_color': f'rgb{self.config.pose_colors["landmark_points"]}',
+                    'line_thickness': self.config.pose_line_thickness,
+                    'point_radius': self.config.pose_point_radius,
+                    'connections': self.pose_landmarker_generator.pose_connections,
+                    'excluded_landmarks': self.pose_landmarker_generator.excluded_landmarks
+                }
+                svg_generator.add_pose_landmarks(pose_landmark_array, pose_config)
+                metadata['features'].append('pose_landmarks')
+        
         # Add metadata
         svg_generator.add_metadata(metadata)
         
         return svg_generator.to_string(pretty=True)
     
     def _extract_contours_from_outline(self, outline_image: np.ndarray) -> List[np.ndarray]:
-        """Extract contours from DexiNed outline image"""
+        """Extract contours from DexiNed outline image with quality optimization"""
         # Convert to grayscale if needed
         if len(outline_image.shape) == 3:
             gray = cv2.cvtColor(outline_image, cv2.COLOR_RGB2GRAY)
         else:
             gray = outline_image
         
-        # Find contours
-        contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Ensure proper binary image for contour detection
+        # DexiNed outputs float values, convert to proper binary
+        if gray.dtype == np.float32 or gray.dtype == np.float64:
+            gray = (gray * 255).astype(np.uint8)
         
-        # Filter contours by size
-        min_contour_area = 50
-        filtered_contours = [c for c in contours if cv2.contourArea(c) > min_contour_area]
+        # Apply light morphological operations to clean up the image
+        kernel = np.ones((1,1), np.uint8)  # Smaller kernel to preserve details
+        gray = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
         
-        return filtered_contours
+        # Apply threshold to ensure binary image
+        _, binary = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY)  # Even lower threshold for more edge details
+        
+        # Find contours - use RETR_LIST to get all contours, not just external
+        # Use CHAIN_APPROX_NONE for more precise contours initially
+        contours, _ = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+        
+        # Filter and process contours
+        processed_contours = []
+        min_contour_length = 15  # Reduced minimum perimeter to capture more details
+        epsilon_factor = 0.002  # Reduced approximation for better detail preservation
+        
+        for contour in contours:
+            # Filter by perimeter length for better edge quality
+            if cv2.arcLength(contour, True) > min_contour_length:
+                # Approximate contour to reduce noise while preserving important features
+                epsilon = epsilon_factor * cv2.arcLength(contour, True)
+                approx_contour = cv2.approxPolyDP(contour, epsilon, True)
+                processed_contours.append(approx_contour)
+        
+        # Optional debug info
+        # print(f"Debug: Found {len(contours)} total contours, {len(processed_contours)} after filtering and processing")
+        
+        return processed_contours
     
     def _blend_images(self, base_image: np.ndarray, overlay_image: np.ndarray) -> np.ndarray:
         """Blend two images together (legacy method, use _add_lines_to_canvas instead)"""
@@ -773,7 +992,9 @@ class WireframePortraitProcessor:
     
     def _save_image(self, image: np.ndarray, output_path: str):
         """Save image to file"""
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        output_dir = os.path.dirname(output_path)
+        if output_dir:  # Only create directory if dirname is not empty
+            os.makedirs(output_dir, exist_ok=True)
         
         if len(image.shape) == 3 and image.shape[2] == 4:  # RGBA
             # Convert RGBA to BGRA for OpenCV
@@ -792,12 +1013,26 @@ def create_preset_configs() -> Dict[str, WireframeConfig]:
     """Create preset configurations for different user types"""
     presets = {}
     
-    # Beginner: All features enabled
+    # Default DexiNed model path
+    default_dexined_path = os.path.join(
+        os.path.dirname(__file__), "..", "DexiNed", "checkpoints", "BIPED", "10", "10_model.pth"
+    )
+    
+    # Default pose landmarker model path  
+    default_pose_path = os.path.join(
+        os.path.dirname(__file__), "..", "mediapipe_practice", "pose_landmarker.task"
+    )
+    default_pose_path = os.path.abspath(default_pose_path)
+    
+    # Beginner: All features enabled with detailed guidelines
     presets['beginner'] = WireframeConfig(
         enable_construction_lines=True,
         enable_mesh=True,
         enable_dexined_outline=True,
-        output_format="rgba"
+        enable_pose_landmarks=True,
+        dexined_model_path=default_dexined_path,
+        pose_model_path=default_pose_path,
+        output_format="rgba",
     )
     
     # Intermediate: Construction + Mesh
@@ -805,7 +1040,9 @@ def create_preset_configs() -> Dict[str, WireframeConfig]:
         enable_construction_lines=True,
         enable_mesh=True,
         enable_dexined_outline=False,
-        output_format="rgba"
+        enable_pose_landmarks=True,
+        pose_model_path=default_pose_path,
+        output_format="rgba",
     )
     
     # Advanced: Construction only
@@ -813,23 +1050,30 @@ def create_preset_configs() -> Dict[str, WireframeConfig]:
         enable_construction_lines=True,
         enable_mesh=False,
         enable_dexined_outline=False,
-        output_format="rgba"
+        enable_pose_landmarks=True,
+        pose_model_path=default_pose_path,
+        output_format="rgba",
     )
     
-    # Outline only: DexiNed only
+    # Outline only: DexiNed outline
     presets['outline_only'] = WireframeConfig(
         enable_construction_lines=False,
         enable_mesh=False,
         enable_dexined_outline=True,
-        output_format="rgba"
+        enable_pose_landmarks=True,
+        dexined_model_path=default_dexined_path,
+        pose_model_path=default_pose_path,
+        output_format="rgba",
     )
     
-    # Mesh only: Face mesh only
+    # Mesh only: Face mesh only with moderate enhancement
     presets['mesh_only'] = WireframeConfig(
         enable_construction_lines=False,
         enable_mesh=True,
         enable_dexined_outline=False,
-        output_format="rgba"
+        enable_pose_landmarks=True,
+        pose_model_path=default_pose_path,
+        output_format="rgba",
     )
     
     return presets
@@ -849,6 +1093,8 @@ def main():
                        help='Enable face mesh')
     parser.add_argument('--dexined', action='store_true',
                        help='Enable DexiNed outline')
+    parser.add_argument('--pose-landmarks', action='store_true',
+                       help='Enable pose landmarks detection')
     
     # Presets
     parser.add_argument('--preset', choices=['beginner', 'intermediate', 'advanced', 
@@ -859,6 +1105,9 @@ def main():
     parser.add_argument('--dexined-model', 
                        default='../DexiNed/checkpoints/BIPED2CLASSIC/10_model.pth',
                        help='Path to DexiNed model')
+    parser.add_argument('--pose-model',
+                       default='../mediapipe_practice/pose_landmarker.task',
+                       help='Path to pose landmarker model')
     parser.add_argument('--output-format', choices=['rgb', 'rgba', 'svg'],
                        default='rgba', help='Output format')
     parser.add_argument('--background-removal', 
@@ -885,6 +1134,7 @@ def main():
             enable_construction_lines=args.construction_lines,
             enable_mesh=args.mesh,
             enable_dexined_outline=args.dexined,
+            enable_pose_landmarks=args.pose_landmarks,
             output_format=args.output_format,
             background_removal_method=args.background_removal,
             enable_svg_export=args.svg or args.output_format == 'svg',
@@ -898,6 +1148,14 @@ def main():
     else:
         config.dexined_model_path = args.dexined_model
     
+    # Set pose model path - use absolute path
+    if args.pose_model.startswith('../'):
+        # Convert relative path to absolute, relative to script directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config.pose_model_path = os.path.abspath(os.path.join(script_dir, args.pose_model))
+    else:
+        config.pose_model_path = args.pose_model
+    
     # Process image
     processor = WireframePortraitProcessor(config)
     results = processor.process_image(args.input, args.output)
@@ -908,6 +1166,7 @@ def main():
         print(f"  Construction Lines: {'✓' if config.enable_construction_lines else '✗'}")
         print(f"  Face Mesh: {'✓' if config.enable_mesh else '✗'}")
         print(f"  DexiNed Outline: {'✓' if config.enable_dexined_outline else '✗'}")
+        print(f"  Pose Landmarks: {'✓' if config.enable_pose_landmarks else '✗'}")
     else:
         print("Wireframe processing failed!")
 

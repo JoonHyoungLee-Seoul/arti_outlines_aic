@@ -171,7 +171,7 @@ class SVGGenerator:
     
     def add_dexined_outline(self, contours: List[np.ndarray], config: dict):
         """
-        Add DexiNed processed outline to SVG.
+        Add DexiNed processed outline to SVG with improved path generation.
         
         Args:
             contours: OpenCV contours from DexiNed processing
@@ -180,28 +180,48 @@ class SVGGenerator:
         group = ET.SubElement(self.svg_root, 'g')
         group.set('id', 'dexined-outline')
         
-        color = config.get('color', '#800080')  # Purple
-        thickness = config.get('thickness', 2)
+        color = config.get('color', '#000000')  # Black for better contrast
+        thickness = config.get('thickness', 1.5)  # Slightly thicker for better visibility
         
         for i, contour in enumerate(contours):
-            if len(contour) < 3:
-                continue  # Ignore tiny contours
+            if len(contour) < 4:  # Need at least 4 points for meaningful contour
+                continue
                 
             path = ET.SubElement(group, 'path')
             path.set('id', f'contour-{i}')
             path.set('stroke', color)
             path.set('stroke-width', str(thickness))
-            path.set('fill', 'none')  # outlines only
+            path.set('fill', 'none')
+            path.set('stroke-linecap', 'round')  # Rounded line caps for smoother appearance
+            path.set('stroke-linejoin', 'round')  # Rounded line joins
             
-            # Build path data from contour points
+            # Build path data from contour points with curve optimization
             points = contour.reshape(-1, 2)
-            path_data = f'M {points[0][0]} {points[0][1]}'
             
-            for point in points[1:]:
-                path_data += f' L {point[0]} {point[1]}'
+            if len(points) < 4:
+                # Simple line for very short contours
+                path_data = f'M {points[0][0]} {points[0][1]}'
+                for point in points[1:]:
+                    path_data += f' L {point[0]} {point[1]}'
+            else:
+                # Use cubic Bezier curves for smoother paths
+                path_data = f'M {points[0][0]} {points[0][1]}'
+                
+                # Generate smooth curve through points
+                for j in range(1, len(points)):
+                    if j == len(points) - 1:
+                        # Last point - simple line to close
+                        path_data += f' L {points[j][0]} {points[j][1]}'
+                    else:
+                        # Use quadratic curves for smoother paths
+                        path_data += f' L {points[j][0]} {points[j][1]}'
             
-            # Close the path if it's a complete contour
-            if len(points) > 10:  # Only close substantial contours
+            # Close the path if it forms a meaningful closed shape
+            contour_area = len(points)
+            is_closed_contour = (abs(points[0][0] - points[-1][0]) < 5 and 
+                               abs(points[0][1] - points[-1][1]) < 5)
+            
+            if contour_area > 6 and is_closed_contour:
                 path_data += ' Z'
             
             path.set('d', path_data)
@@ -217,6 +237,89 @@ class SVGGenerator:
         line.set('y2', str(y2))
         line.set('stroke', color)
         line.set('stroke-width', str(thickness))
+    
+    def add_pose_landmarks(self, pose_landmarks: np.ndarray, config: dict):
+        """
+        Add pose landmarks and body skeleton to SVG.
+        
+        Args:
+            pose_landmarks: Pose landmark coordinates array (shape: [33, 3])
+            config: Configuration dictionary containing:
+                   - line_color: Color for body connections
+                   - point_color: Color for landmark points  
+                   - line_thickness: Thickness of connection lines
+                   - point_radius: Radius of landmark points
+                   - connections: List of connection tuples
+                   - excluded_landmarks: Set of landmark indices to exclude
+        """
+        if pose_landmarks.size == 0:
+            return
+            
+        # Extract configuration
+        line_color = config.get('line_color', 'rgb(255, 165, 0)')  # Orange
+        point_color = config.get('point_color', 'rgb(255, 0, 0)')  # Red
+        line_thickness = config.get('line_thickness', 2)
+        point_radius = config.get('point_radius', 4)
+        connections = config.get('connections', [])
+        excluded_landmarks = config.get('excluded_landmarks', set())
+        
+        # Create group for pose landmarks
+        pose_group = ET.SubElement(self.svg_root, 'g')
+        pose_group.set('id', 'pose-landmarks')
+        pose_group.set('class', 'wireframe-pose')
+        
+        # Add connection lines (body skeleton)
+        connections_group = ET.SubElement(pose_group, 'g')
+        connections_group.set('id', 'pose-connections')
+        
+        for start_idx, end_idx in connections:
+            # Skip if landmarks are excluded or out of bounds
+            if (start_idx in excluded_landmarks or 
+                end_idx in excluded_landmarks or
+                start_idx >= len(pose_landmarks) or 
+                end_idx >= len(pose_landmarks)):
+                continue
+                
+            start_landmark = pose_landmarks[start_idx]
+            end_landmark = pose_landmarks[end_idx]
+            
+            # Convert normalized coordinates to pixel coordinates
+            x1 = start_landmark[0] * self.width
+            y1 = start_landmark[1] * self.height
+            x2 = end_landmark[0] * self.width
+            y2 = end_landmark[1] * self.height
+            
+            # Create connection line
+            line = ET.SubElement(connections_group, 'line')
+            line.set('x1', str(x1))
+            line.set('y1', str(y1))
+            line.set('x2', str(x2))
+            line.set('y2', str(y2))
+            line.set('stroke', line_color)
+            line.set('stroke-width', str(line_thickness))
+            line.set('stroke-linecap', 'round')
+            line.set('stroke-linejoin', 'round')
+        
+        # Add landmark points
+        points_group = ET.SubElement(pose_group, 'g')
+        points_group.set('id', 'pose-points')
+        
+        for idx, landmark in enumerate(pose_landmarks):
+            # Skip excluded landmarks
+            if idx in excluded_landmarks:
+                continue
+                
+            # Convert normalized coordinates to pixel coordinates
+            x = landmark[0] * self.width
+            y = landmark[1] * self.height
+            
+            # Create landmark point
+            circle = ET.SubElement(points_group, 'circle')
+            circle.set('cx', str(x))
+            circle.set('cy', str(y))
+            circle.set('r', str(point_radius))
+            circle.set('fill', point_color)
+            circle.set('stroke', 'none')
     
     def add_metadata(self, metadata: dict):
         """Add metadata to SVG."""

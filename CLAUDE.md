@@ -22,6 +22,7 @@ This is a Portrait Outline Generator project that creates artistic wireframe por
 - **✅ Wireframe Portrait System** - Complete flexible wireframe generation system with toggleable features (construction lines, face mesh, DexiNed outlines)
 - **✅ SVG Export System** - Scalable vector graphics export with infinite zoom capability, web-ready format for frontend integration
 - **✅ High-Resolution Support** - 4K, 8K, and print quality (A4 300DPI) wireframe processing with adaptive scaling
+- **✅ MediaPipe Pose Landmarker Integration** - Body skeleton detection with 33 pose landmarks, filtered to exclude face/hand details (landmarks 0-10, 17-22)
 
 **Active Components:**
 - **Wireframe Portrait Processor** (`image_processing/wireframe_portrait_processor.py`) - Main system for generating wireframe portraits with configurable features
@@ -70,11 +71,17 @@ python wireframe_portrait_processor.py input.jpg --preset intermediate --svg --s
 # SVG-only output for frontend applications
 python wireframe_portrait_processor.py input.jpg --preset advanced --output-format svg -o output.svg
 
+# High-quality SVG with DexiNed outline (production ready)
+python wireframe_portrait_processor.py input.jpg --preset beginner --svg --svg-output high_quality.svg -o output.png
+
 # High-resolution processing (4K, 8K, print quality)
 python high_resolution_wireframe_processor.py input.jpg --target-resolution 3840x2160 --preset beginner
 
 # Custom feature configuration
-python wireframe_portrait_processor.py input.jpg --construction-lines --mesh --dexined -o custom.png
+python wireframe_portrait_processor.py input.jpg --construction-lines --mesh --dexined --pose-landmarks -o custom.png
+
+# Pose landmarks only for body skeleton analysis
+python wireframe_portrait_processor.py input.jpg --pose-landmarks -o skeleton.png
 ```
 
 ### Data Operations
@@ -104,15 +111,17 @@ The wireframe portrait generation system follows a modular, feature-based archit
 
 ### 🎯 **Wireframe Generation Pipeline**
 1. **Face Detection** (MediaPipe: GPU-accelerated landmark detection with 468 facial points)
-2. **Construction Lines** (Classical portrait guidelines based on actual facial landmarks)
-3. **Face Mesh** (Detailed wireframe contours using MediaPipe connections)
-4. **Edge Detection** (DexiNed AI-powered outline generation with ROCm acceleration)
-5. **Vector Export** (SVG generation with infinite scalability and web integration)
-6. **High-Resolution Scaling** (Adaptive processing for 4K, 8K, and print quality)
+2. **Pose Detection** (MediaPipe: Body skeleton detection with 33 pose landmarks, filtered for body focus)
+3. **Construction Lines** (Classical portrait guidelines based on actual facial landmarks)
+4. **Face Mesh** (Detailed wireframe contours using MediaPipe connections)
+5. **Pose Skeleton** (Body structure wireframes excluding face and hand details)
+6. **Edge Detection** (DexiNed AI-powered outline generation with ROCm acceleration)
+7. **Vector Export** (SVG generation with infinite scalability and web integration)
+8. **High-Resolution Scaling** (Adaptive processing for 4K, 8K, and print quality)
 
 ### 🔧 **System Components**
-- **Configurable Features**: Toggle construction lines, face mesh, and outlines independently
-- **Preset System**: Beginner (all features), intermediate (lines + mesh), advanced (lines only)
+- **Configurable Features**: Toggle construction lines, face mesh, pose landmarks, and outlines independently
+- **Preset System**: Beginner (all features), intermediate (lines + mesh + pose), advanced (lines + pose only)
 - **Multi-Format Output**: PNG, SVG, high-resolution variants
 - **GPU Acceleration**: ROCm/CUDA support for MediaPipe and DexiNed processing
 - **Web Integration**: Standards-compliant SVG with zoom, animation, and interaction support
@@ -174,6 +183,7 @@ Portrait images are sourced from the Art Institute of Chicago API with strict fi
 ### ✅ **Production Ready**
 - Complete wireframe portrait generation system with preset configurations
 - SVG export with infinite scalability for web/mobile applications
+- **Enhanced DexiNed SVG Quality**: Production-grade edge outline processing with 300-700+ contours
 - High-resolution processing (4K, 8K, print quality) with adaptive scaling
 - GPU-accelerated processing with ROCm/CUDA support
 - Landmark-accurate construction lines based on MediaPipe face detection
