@@ -641,39 +641,43 @@ class BackgroundMerger:
             # Since bg.png still contains the person, we need to remove it using fg alpha mask
             bg_alpha_mask = None  # Will be set after foreground is loaded
 
-            # Load separate foreground image if specified for creative control
-            # When foreground_path is provided, use it INSTEAD of the wireframe
+            # Load separate foreground image for background blending
+            # The wireframe will be overlaid on top of the merged result
+            original_foreground = None
             if foreground_path and os.path.exists(foreground_path):
                 fg_loaded = cv2.imread(foreground_path, cv2.IMREAD_UNCHANGED)
                 if fg_loaded is not None:
-                    # Convert to RGBA or RGB but preserve alpha channel if present
+                    # Convert to RGB format
                     if len(fg_loaded.shape) == 3:
                         if fg_loaded.shape[2] == 4:  # BGRA
-                            foreground = cv2.cvtColor(fg_loaded, cv2.COLOR_BGRA2RGBA)
+                            original_foreground = cv2.cvtColor(fg_loaded, cv2.COLOR_BGRA2RGB)
                         elif fg_loaded.shape[2] == 3:  # BGR
-                            foreground = cv2.cvtColor(fg_loaded, cv2.COLOR_BGR2RGB)
+                            original_foreground = cv2.cvtColor(fg_loaded, cv2.COLOR_BGR2RGB)
                         else:
-                            foreground = fg_loaded
+                            original_foreground = fg_loaded
                     else:
                         # Grayscale
-                        foreground = cv2.cvtColor(fg_loaded, cv2.COLOR_GRAY2RGB)
-                    # When foreground_path exists, use it instead of the wireframe
-                    # This ensures fg=0% actually makes foreground disappear
+                        original_foreground = cv2.cvtColor(fg_loaded, cv2.COLOR_GRAY2RGB)
                 else:
                     print(f"Could not load foreground file: {foreground_path}")
+            
+            # Note: Top layer wireframes will be applied after background merge in main process
 
             # Get dimensions and resize both images to match
             fg_height, fg_width = foreground.shape[:2]
             background_resized = cv2.resize(background_rgb, (fg_width, fg_height))
 
+            # Use original foreground image for blending if available, otherwise use wireframe
+            blend_foreground = original_foreground if original_foreground is not None else foreground
+            
             # Handle foreground format and extract proper alpha mask
-            if len(foreground.shape) == 3 and foreground.shape[2] == 4:
+            if len(blend_foreground.shape) == 3 and blend_foreground.shape[2] == 4:
                 # RGBA foreground - use existing alpha channel
-                foreground_rgb = foreground[:, :, :3]
-                fg_alpha_channel = foreground[:, :, 3] / 255.0
+                foreground_rgb = blend_foreground[:, :, :3]
+                fg_alpha_channel = blend_foreground[:, :, 3] / 255.0
             else:
                 # RGB foreground - create alpha mask for non-white areas
-                foreground_rgb = foreground
+                foreground_rgb = blend_foreground
                 # Create alpha mask: transparent for white areas, opaque for colored areas
                 white_threshold = 250
                 white_mask = np.all(foreground_rgb >= white_threshold, axis=2)
@@ -695,22 +699,32 @@ class BackgroundMerger:
             for c in range(3):  # RGB channels
                 # Calculate contributions with proper transparency handling
                 fg_contribution = foreground_rgb[:, :, c].astype(np.float32) * fg_alpha_channel * fg_alpha
-                # Apply background alpha mask to prevent person areas from showing
+                # Apply background alpha mask to prevent person areas from showing in background
                 bg_contribution = background_resized[:, :, c].astype(np.float32) * bg_alpha * bg_alpha_mask
 
                 # Alpha blending for independent transparency control
                 effective_fg_alpha = fg_alpha_channel * fg_alpha
 
-                # Base blending
-                result[:, :, c] = fg_contribution + bg_contribution * (1 - effective_fg_alpha)
-
-                # WHITE MASKING: Fill masked areas (where person was removed) with white
-                # Where bg_alpha_mask is 0 (person was removed), fill with white (255)
-                white_mask_areas = bg_alpha_mask == 0.0
-                result[:, :, c][white_mask_areas] = 255.0
+                # Start with background contribution
+                result[:, :, c] = bg_contribution
+                
+                # Add foreground contribution where person exists
+                person_areas = fg_alpha_channel > 0
+                result[:, :, c][person_areas] = (
+                    fg_contribution[person_areas] + 
+                    bg_contribution[person_areas] * (1 - effective_fg_alpha[person_areas])
+                )
+                
+                # For areas where foreground transparency is 0%, fill with background color
+                # For creative control: fg_alpha=0 means transparent person area
+                if fg_alpha == 0:
+                    # When foreground is completely transparent, show background in person areas
+                    result[:, :, c][person_areas] = bg_contribution[person_areas]
 
             # Clip to valid range and convert back to uint8
             result = np.clip(result, 0, 255).astype(np.uint8)
+            
+            # Top layer wireframes will be applied in main process after this function returns
 
             print(f"Images merged - Foreground: {self.config.foreground_transparency}%, Background: {self.config.background_transparency}%")
             return result
@@ -916,45 +930,121 @@ class WireframePortraitProcessor:
         height, width = image.shape[:2]
         current_image = np.ones((height, width, 3), dtype=np.uint8) * 255
         
-        # Sequentially overlay the requested features onto the canvas
-        if self.config.enable_construction_lines:
-            current_image = self.construction_generator.draw_construction_lines(
-                current_image, landmarks, self.config
-            )
-            results['construction_lines'] = current_image.copy()
-        
+        # Generate each wireframe layer separately to ensure proper stacking
+        # Layer 1: Face Mesh (drawn directly on white canvas)
+        face_mesh_layer = None
         if self.config.enable_mesh:
-            current_image = self.mesh_generator.draw_face_mesh(
-                current_image, detection_result, self.config
+            print("Generating face mesh layer...")
+            face_mesh_layer = self.mesh_generator.draw_face_mesh(
+                current_image.copy(), detection_result, self.config
             )
-            results['mesh'] = current_image.copy()
+            results['mesh'] = face_mesh_layer.copy()
+            print("Face mesh layer generated")
         
-        if self.config.enable_dexined_outline and self.dexined_generator:
-            outline_image = self.dexined_generator.generate_outline(image, self.config)
-            # Add outline to canvas (only the lines)
-            current_image = self._add_lines_to_canvas(current_image, outline_image)
-            results['dexined_outline'] = current_image.copy()
+        # Layer 2: Construction Lines (separate layer)
+        construction_lines_layer = None
+        if self.config.enable_construction_lines:
+            print("Generating construction lines layer...")
+            construction_canvas = np.ones((height, width, 3), dtype=np.uint8) * 255
+            construction_lines_layer = self.construction_generator.draw_construction_lines(
+                construction_canvas, landmarks, self.config
+            )
+            results['construction_lines'] = construction_lines_layer.copy()
+            print("Construction lines layer generated")
         
+        # Layer 3: Pose Landmarks (separate layer)
+        pose_landmarks_layer = None
         if self.config.enable_pose_landmarks and self.pose_landmarker_generator:
+            print("Generating pose landmarks layer...")
             pose_landmarks = self.pose_landmarker_generator.detect_pose_landmarks(image, self.config)
             if pose_landmarks:
-                current_image = self.pose_landmarker_generator.draw_pose_landmarks(
-                    current_image, pose_landmarks, self.config
+                pose_canvas = np.ones((height, width, 3), dtype=np.uint8) * 255
+                pose_landmarks_layer = self.pose_landmarker_generator.draw_pose_landmarks(
+                    pose_canvas, pose_landmarks, self.config
                 )
-                results['pose_landmarks'] = current_image.copy()
+                results['pose_landmarks'] = pose_landmarks_layer.copy()
+                print("Pose landmarks layer generated")
+            else:
+                print("No pose landmarks detected")
+        
+        # Layer 4: DexiNed Outline (if enabled)
+        dexined_layer = None
+        if self.config.enable_dexined_outline and self.dexined_generator:
+            print("Generating DexiNed outline layer...")
+            dexined_layer = self.dexined_generator.generate_outline(image, self.config)
+            results['dexined_outline'] = dexined_layer.copy()
+            print("DexiNed outline layer generated")
 
-        # Apply background merge if enabled
+        # FINAL LAYER COMPOSITION (Bottom → Top)
+        print("Starting final layer composition...")
+        
         if self.config.enable_background_merge and self.background_merger:
+            # Step 1 & 2: Background + Foreground merge
             background_path = self.background_merger.find_matching_background(image_path)
             foreground_path = self.background_merger.find_matching_foreground(image_path)
 
             if background_path:
+                print("Compositing background and foreground layers...")
+                # Use white canvas as base for background merge
+                base_canvas = np.ones((height, width, 3), dtype=np.uint8) * 255
                 current_image = self.background_merger.merge_with_background(
-                    current_image, background_path, foreground_path
+                    base_canvas, background_path, foreground_path
                 )
                 results['background_merged'] = current_image.copy()
+                print("Background/foreground layers composited")
             else:
                 print("Warning: Background merge enabled but no matching background found")
+        else:
+            # Start with white canvas if no background merge
+            current_image = np.ones((height, width, 3), dtype=np.uint8) * 255
+            
+        # Step 3: Overlay Face Mesh
+        if face_mesh_layer is not None:
+            print("Overlaying face mesh layer...")
+            mesh_mask = np.all(face_mesh_layer < 250, axis=2)
+            mesh_pixel_count = np.sum(mesh_mask)
+            if mesh_pixel_count > 0:
+                current_image[mesh_mask] = face_mesh_layer[mesh_mask]
+                print(f"Face mesh overlaid: {mesh_pixel_count} pixels")
+            
+        # Step 4: Overlay Construction Lines (Top layer)
+        if construction_lines_layer is not None:
+            print("Overlaying construction lines layer...")
+            # More lenient mask detection - not pure white (255,255,255)
+            construction_mask = ~np.all(construction_lines_layer == 255, axis=2)
+            construction_pixel_count = np.sum(construction_mask)
+            if construction_pixel_count > 0:
+                # Make construction lines darker for better visibility
+                darkened_construction = np.clip(construction_lines_layer[construction_mask] * 0.8, 0, 180)
+                current_image[construction_mask] = darkened_construction
+                print(f"Construction lines overlaid: {construction_pixel_count} pixels")
+            else:
+                print("WARNING: No construction line pixels found")
+                
+        # Step 5: Overlay Pose Landmarks (Top layer)  
+        if pose_landmarks_layer is not None:
+            print("Overlaying pose landmarks layer...")
+            # More lenient mask detection - not pure white (255,255,255)
+            pose_mask = ~np.all(pose_landmarks_layer == 255, axis=2)
+            pose_pixel_count = np.sum(pose_mask)
+            if pose_pixel_count > 0:
+                # Make pose landmarks darker for better visibility
+                darkened_pose = np.clip(pose_landmarks_layer[pose_mask] * 0.8, 0, 180)
+                current_image[pose_mask] = darkened_pose
+                print(f"Pose landmarks overlaid: {pose_pixel_count} pixels")
+            else:
+                print("WARNING: No pose landmark pixels found")
+                
+        # Step 6: Overlay DexiNed Outline (if enabled)
+        if dexined_layer is not None:
+            print("Overlaying DexiNed outline layer...")
+            outline_mask = np.all(dexined_layer < 250, axis=2)
+            outline_pixel_count = np.sum(outline_mask)
+            if outline_pixel_count > 0:
+                current_image[outline_mask] = dexined_layer[outline_mask]
+                print(f"DexiNed outline overlaid: {outline_pixel_count} pixels")
+        
+        print("Final layer composition completed")
 
         # Apply background removal if needed to produce RGBA output
         if self.config.output_format == "rgba":
