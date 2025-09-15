@@ -1,26 +1,29 @@
 # 🎨 Portrait Wireframe Generator
 
-A complete system for generating artistic wireframe portraits from artworks using computer vision and deep learning. Features flexible configuration, SVG export, and high-resolution processing for modern web applications.
+A complete system for generating artistic wireframe portraits from artworks using computer vision and deep learning. Features flexible configuration, SVG export, high-resolution processing, and background merge capabilities for modern web applications and art education.
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-GPU-green.svg)](https://mediapipe.dev)
 [![ROCm](https://img.shields.io/badge/ROCm-6.1-red.svg)](https://rocm.docs.amd.com)
 [![SVG](https://img.shields.io/badge/Export-SVG-orange.svg)](https://www.w3.org/Graphics/SVG/)
+[![Dataset](https://img.shields.io/badge/Dataset-AIC_298_Portraits-lightblue.svg)](https://www.artic.edu/)
 
 ## ✨ Features
 
 ### 🎯 **Core Capabilities**
-- **Flexible Wireframes**: Toggle construction lines, face mesh, and edge outlines independently
-- **Preset Configurations**: Beginner, intermediate, and advanced skill levels
+- **Flexible Wireframes**: Toggle construction lines, face mesh, pose landmarks, and edge outlines independently
+- **Preset Configurations**: Beginner, intermediate, advanced, outline_only, and mesh_only skill levels
 - **SVG Export**: Scalable vector graphics with infinite zoom for web integration
 - **High-Resolution**: 4K, 8K, and print quality (A4 300DPI) processing
 - **GPU Acceleration**: ROCm/CUDA support for optimal performance
+- **Background Merge**: Independent foreground/background transparency control for creative applications
 
 ### 🎨 **Wireframe Components**
-- **Construction Lines**: Classical portrait guidelines based on facial landmarks
-- **Face Mesh**: Detailed MediaPipe wireframe contours (468 facial points)
+- **Construction Lines**: Classical portrait guidelines based on actual facial landmarks (MediaPipe 468 points)
+- **Face Mesh**: Detailed MediaPipe wireframe contours with tesselation and contours
+- **Pose Landmarks**: MediaPipe body skeleton with 33 pose points (body-focused, excludes face/hand details)
 - **Edge Outlines**: AI-powered DexiNed edge detection with enhanced SVG quality and GPU acceleration
-- **Pose Landmarks**: MediaPipe body skeleton with 33 pose points (excludes face/hand details)
+- **Background Composition**: Intelligent image matching with 0-100% transparency control for both layers
 
 ### 🌐 **Web Integration**
 - **Infinite Scalability**: Vector SVG format perfect for zoom functionality
@@ -42,13 +45,14 @@ A complete system for generating artistic wireframe portraits from artworks usin
 git clone <repository-url>
 cd arti_outlines
 
-# Setup environment
-source activate.sh
+# Create and activate conda environment
+conda create -n portrait_outline python=3.10
+conda activate portrait_outline
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Setup GPU acceleration (one-time)
+# Setup GPU acceleration (one-time, for ROCm/CUDA support)
 ./scripts/setup/install_gpu_support.sh
 ```
 
@@ -65,6 +69,16 @@ python wireframe_portrait_processor.py input.jpg --preset intermediate --svg --s
 
 # High-resolution processing
 python high_resolution_wireframe_processor.py input.jpg --target-resolution 3840x2160
+
+# Background merge with transparency control
+python wireframe_portrait_processor.py input.jpg --preset intermediate --background-merge \
+  --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ \
+  --foreground-transparency 100 --background-transparency 50 -o merged.png
+
+# Creative drawing practice mode (white silhouette for tracing)
+python wireframe_portrait_processor.py input.jpg --preset intermediate --background-merge \
+  --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ \
+  --foreground-transparency 0 --background-transparency 100 -o drawing_practice.png
 ```
 
 ## 📚 Documentation
@@ -76,18 +90,28 @@ python high_resolution_wireframe_processor.py input.jpg --target-resolution 3840
 --preset beginner      # All features: construction lines + face mesh + outlines + pose landmarks
 --preset intermediate  # Lines + mesh + pose landmarks (recommended for learning)
 --preset advanced     # Construction lines + pose landmarks (for experienced artists)
+--preset outline_only  # DexiNed edge detection only
+--preset mesh_only     # Face mesh only
 
 # Custom feature control
---construction-lines   # Enable facial guidelines
---mesh                # Enable detailed face mesh
+--construction-lines   # Enable facial guidelines based on MediaPipe landmarks
+--mesh                # Enable detailed face mesh (tesselation + contours)
 --dexined            # Enable AI edge detection
 --pose-landmarks      # Enable body skeleton (shoulders, torso, arms, legs)
 
 # Output formats
 --output-format rgba  # PNG with transparency (default)
---output-format svg   # Scalable vector graphics
+--output-format rgb   # PNG without transparency
+--output-format svg   # Scalable vector graphics only
 --svg                 # Enable SVG export alongside raster
 --svg-output path.svg # Specify SVG output location
+
+# Background merge with transparency control
+--background-merge                           # Enable background merge feature
+--background-dir path/to/backgrounds/        # Directory with background images
+--foreground-dir path/to/foregrounds/        # Directory with foreground images
+--foreground-transparency 0-100             # Foreground opacity (0=transparent, 100=opaque)
+--background-transparency 0-100             # Background opacity (0=transparent, 100=opaque)
 ```
 
 ### Python API
@@ -150,6 +174,11 @@ graph TD
 python wireframe_portrait_processor.py student_work.jpg --preset beginner -o guidelines.png
 python wireframe_portrait_processor.py student_work.jpg --preset intermediate -o practice.png
 python wireframe_portrait_processor.py student_work.jpg --preset advanced -o master.png
+
+# Drawing practice with background merge
+python wireframe_portrait_processor.py portrait.jpg --preset intermediate --background-merge \
+  --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ \
+  --foreground-transparency 0 --background-transparency 100 -o drawing_template.png
 ```
 
 ### 🌐 **Web Applications**
@@ -274,14 +303,29 @@ const WireframeViewer = ({ svgContent, features }) => {
 ```
 arti_outlines/
 ├── image_processing/           # Core wireframe system
-│   ├── wireframe_portrait_processor.py
-│   ├── svg_generator.py
-│   ├── high_resolution_wireframe_processor.py
-│   └── SVG_EXPORT_DOCUMENTATION.md
-├── download_data/             # Art Institute of Chicago dataset
-├── mediapipe_practice/        # Face landmark detection
+│   ├── wireframe_portrait_processor.py  # Main wireframe processor
+│   ├── svg_generator.py                 # SVG export functionality
+│   ├── high_resolution_wireframe_processor.py  # 4K/8K processing
+│   ├── run_cutout.py                    # BiRefNet background segmentation
+│   ├── models/                          # ONNX models (BiRefNet)
+│   ├── out_sample/                      # Sample segmented images
+│   │   ├── clipped_images_fg/           # Foreground images for background merge
+│   │   └── clipped_images_bg/           # Background images for merge
+│   └── SVG_EXPORT_DOCUMENTATION.md     # Comprehensive SVG integration guide
+├── download_data/             # Art Institute of Chicago dataset (298 portraits)
+│   ├── aic_portrait_paintings_downloader.py  # Data acquisition tool
+│   └── aic_sample/
+│       └── images/            # 298 public domain portrait paintings
+├── mediapipe_practice/        # MediaPipe models and notebooks
+│   ├── face_landmarker.task   # Face landmark detection model
+│   ├── pose_landmarker.task   # Pose detection model
+│   └── face_landmark.ipynb    # GPU-accelerated face detection
+├── DexiNed/                   # DexiNed edge detection (submodule)
 ├── scripts/                   # GPU setup and utilities
-└── out/                      # Generated outputs
+│   ├── setup/                 # Installation scripts
+│   ├── gpu/                   # GPU acceleration setup
+│   └── runtime/               # Runtime environment configuration
+└── out/                      # Generated wireframe outputs
 ```
 
 ### Contributing
@@ -294,14 +338,23 @@ arti_outlines/
 ### Testing
 
 ```bash
-# Test wireframe generation
-python wireframe_portrait_processor.py ../download_data/aic_sample/images/110873.jpg --preset intermediate
+# Test wireframe generation with sample image
+python wireframe_portrait_processor.py ../download_data/aic_sample/images/102777.jpg --preset intermediate
 
 # Test SVG export
-python wireframe_portrait_processor.py ../download_data/aic_sample/images/110873.jpg --output-format svg -o test.svg
+python wireframe_portrait_processor.py ../download_data/aic_sample/images/102777.jpg --output-format svg -o test.svg
 
 # Test high-resolution processing
-python high_resolution_wireframe_processor.py ../download_data/aic_sample/images/110873.jpg --target-resolution 3840x2160
+python high_resolution_wireframe_processor.py ../download_data/aic_sample/images/102777.jpg --target-resolution 3840x2160
+
+# Test background merge functionality
+python wireframe_portrait_processor.py ../download_data/aic_sample/images/102777.jpg --preset intermediate \
+  --background-merge --foreground-dir out_sample/clipped_images_fg/ \
+  --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 \
+  --background-transparency 50 -o test_merge.png
+
+# Test background segmentation (BiRefNet)
+python run_cutout.py -i ../download_data/aic_sample/images/102777.jpg
 ```
 
 ## 📄 License
@@ -310,17 +363,29 @@ This project uses public domain artwork from the Art Institute of Chicago and op
 
 ## 🙏 Acknowledgments
 
-- **Art Institute of Chicago**: Public domain portrait dataset
-- **MediaPipe**: Face landmark detection and mesh generation
-- **DexiNed**: Deep learning edge detection
-- **BiRefNet**: Background segmentation for clean wireframes
+- **Art Institute of Chicago**: Public domain portrait dataset (298 paintings)
+- **MediaPipe**: Face landmark detection (468 points) and pose estimation (33 landmarks)
+- **DexiNed**: Deep learning edge detection for high-quality outlines
+- **BiRefNet**: ONNX-based background segmentation for clean wireframes
+- **ROCm/CUDA**: GPU acceleration support for optimal performance
 
 ## 📞 Support
 
 For technical support and feature requests:
-- Check `SVG_EXPORT_DOCUMENTATION.md` for comprehensive integration guide
-- Review `CLAUDE.md` for development environment setup
-- GPU acceleration setup documented in `scripts/setup/`
+- Check `image_processing/SVG_EXPORT_DOCUMENTATION.md` for comprehensive SVG integration guide
+- Review `CLAUDE.md` for complete development environment setup and feature documentation
+- GPU acceleration setup documented in `scripts/setup/install_gpu_support.sh`
+- Background merge functionality detailed in CLI help: `python wireframe_portrait_processor.py --help`
+
+## 📊 Dataset Information
+
+This project includes **298 public domain portrait paintings** from the Art Institute of Chicago:
+- **Source**: AIC API with `is_public_domain = True` filter
+- **Format**: High-resolution JPG images via IIIF
+- **Metadata**: Comprehensive curatorial information included
+- **Segmentation**: Pre-processed foreground/background separation using BiRefNet
+- **Location**: `download_data/aic_sample/images/` (298 files)
+- **Segmented Images**: `image_processing/out_sample/clipped_images_fg/` and `clipped_images_bg/`
 
 ---
 
