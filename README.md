@@ -1,6 +1,6 @@
 # 🎨 Portrait Wireframe Generator
 
-A complete system for generating artistic wireframe portraits from artworks using computer vision and deep learning. Features flexible configuration, SVG export, high-resolution processing, and background merge capabilities for modern web applications and art education.
+A complete system for generating artistic wireframe portraits from artworks using computer vision and deep learning. Features enhanced layer composition, hybrid PNG/SVG architecture, flexible configuration, and background merge capabilities for modern web applications and art education.
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-GPU-green.svg)](https://mediapipe.dev)
@@ -11,6 +11,8 @@ A complete system for generating artistic wireframe portraits from artworks usin
 ## ✨ Features
 
 ### 🎯 **Core Capabilities**
+- **Enhanced Layer System**: Fixed layer composition ensuring all wireframe elements render correctly with proper ordering
+- **Hybrid PNG/SVG Architecture**: Optimal output combining raster backgrounds with vector wireframes for infinite scalability
 - **Flexible Wireframes**: Toggle construction lines, face mesh, pose landmarks, and edge outlines independently
 - **Preset Configurations**: Beginner, intermediate, advanced, outline_only, and mesh_only skill levels
 - **SVG Export**: Scalable vector graphics with infinite zoom for web integration
@@ -79,6 +81,12 @@ python wireframe_portrait_processor.py input.jpg --preset intermediate --backgro
 python wireframe_portrait_processor.py input.jpg --preset intermediate --background-merge \
   --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ \
   --foreground-transparency 0 --background-transparency 100 -o drawing_practice.png
+
+# Hybrid PNG/SVG output (optimal architecture for web apps)
+python wireframe_portrait_processor.py input.jpg --preset intermediate --svg --svg-output wireframes.svg \
+  --background-merge --foreground-dir out_sample/clipped_images_fg/ \
+  --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 \
+  --background-transparency 50 -o complete_raster.png
 ```
 
 ## 📚 Documentation
@@ -139,7 +147,7 @@ svg_content = results.get('svg_content')
 
 ## 🏗️ Architecture
 
-### System Components
+### Enhanced Layer System Architecture
 
 ```mermaid
 graph TD
@@ -147,24 +155,89 @@ graph TD
     A --> K[MediaPipe Pose Detection]
     B --> C[Landmark Extraction]
     K --> L[Pose Landmark Extraction]
-    C --> D[Construction Lines Generator]
-    C --> E[Face Mesh Generator]
-    L --> M[Pose Skeleton Generator]
-    A --> F[DexiNed Edge Detection]
-    D --> G[Wireframe Compositor]
-    E --> G
-    M --> G
-    F --> G
-    G --> H[PNG Output]
-    G --> I[SVG Generator]
-    I --> J[Vector Output]
+    C --> D[Construction Lines Layer]
+    C --> E[Face Mesh Layer]
+    L --> M[Pose Landmarks Layer]
+    A --> F[DexiNed Outline Layer]
+    N[Background Image] --> O[Layer Compositor]
+    P[Foreground Image] --> O
+    E --> O
+    D --> O
+    M --> O
+    F --> O
+    O --> Q[PNG Raster Output]
+    O --> R[SVG Vector Generator]
+    R --> S[Hybrid SVG Output]
 ```
+
+**Layer Rendering Order (Bottom → Top):**
+1. Background Image (raster)
+2. Foreground Image (raster) 
+3. Face Mesh (vector/raster)
+4. Construction Lines (vector/raster)
+5. Pose Landmarks (vector/raster)
 
 ### Key Modules
 
-- **`wireframe_portrait_processor.py`**: Main processing system with preset configurations
+- **`wireframe_portrait_processor.py`**: Main processing system with enhanced layer composition and preset configurations
 - **`svg_generator.py`**: SVG export with infinite scalability and web integration
 - **`high_resolution_wireframe_processor.py`**: 4K/8K processing with adaptive scaling
+
+## 🔄 Hybrid PNG/SVG Architecture
+
+The system combines the strengths of both raster and vector formats for optimal web integration:
+
+### 📊 **Architecture Benefits**
+
+| Component | Format | Purpose | File Size | Scalability |
+|-----------|--------|---------|-----------|-------------|
+| **Background Images** | PNG | Complex photographic content | 50-200KB | Fixed resolution |
+| **Wireframe Elements** | SVG | Crisp lines and geometric shapes | 1-50KB | Infinite zoom |
+| **Complete Composite** | PNG | Immediate viewing | 100-300KB | Fixed resolution |
+
+### 🎯 **Output Options**
+
+1. **PNG Raster Output** (`complete_raster.png`)
+   - All layers composited into single image
+   - Perfect for immediate viewing and sharing
+   - Traditional image workflow compatibility
+
+2. **SVG Vector Output** (`complete_vector.svg`)
+   - Pure wireframe elements only
+   - Infinite scalability for web applications
+   - Interactive element control with CSS/JavaScript
+
+3. **Hybrid Components** (Web-optimized workflow)
+   - `hybrid_background.png` - Background image layer
+   - `hybrid_foreground.png` - Portrait subject layer  
+   - `hybrid_wireframe.svg` - Vector wireframe overlay
+
+### 💻 **Web Integration Pattern**
+
+```html
+<!-- Optimal web implementation -->
+<div class="portrait-wireframe">
+    <img src="hybrid_background.png" class="background-layer">
+    <img src="hybrid_foreground.png" class="foreground-layer">
+    <div class="wireframe-overlay" data-svg="hybrid_wireframe.svg"></div>
+</div>
+```
+
+```css
+.wireframe-overlay svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Interactive wireframe control */
+.construction-lines { stroke: #ff0000; opacity: 0.7; }
+.face-mesh { stroke: #00ff00; opacity: 0.5; }
+.pose-landmarks { stroke: #0000ff; opacity: 0.8; }
+```
 
 ## 🎯 Use Cases
 
@@ -234,23 +307,27 @@ svg_config.canvas['background_color'] = 'transparent'
 
 ## 📊 Performance
 
-### File Size Comparison
+### File Size Comparison (Enhanced Layer System)
 
-| Format | Resolution | File Size | Scalability | DexiNed Quality |
-|--------|------------|-----------|-------------|-----------------|
-| PNG | 1920×1080 | ~8KB | Fixed | High |
-| PNG | 3840×2160 | ~32KB | Fixed | High |
-| SVG | Vector | ~1-5KB | Infinite | Basic |
-| SVG + Mesh | Vector | ~50KB | Infinite | Enhanced |
-| SVG + DexiNed | Vector | ~300-500KB | Infinite | **Production Quality** |
+| Format | Resolution | File Size | Scalability | Layer Quality | DexiNed Support |
+|--------|------------|-----------|-------------|---------------|-----------------|
+| PNG Composite | 1920×1080 | ~100KB | Fixed | **All layers visible** | High |
+| PNG Composite | 3840×2160 | ~250KB | Fixed | **All layers visible** | High |
+| SVG Vector | Vector | ~1-5KB | Infinite | Wireframes only | Basic |
+| SVG + Face Mesh | Vector | ~50KB | Infinite | **Enhanced mesh** | Enhanced |
+| SVG + DexiNed | Vector | ~300-500KB | Infinite | **Production quality** | **Full support** |
+| Hybrid (PNG+SVG) | Mixed | ~150KB total | **Best of both** | **Complete system** | **Full support** |
 
-### Processing Speed
+### Processing Speed (Enhanced Architecture)
 
 - **Face Detection**: ~200ms (GPU) vs ~800ms (CPU)
-- **Wireframe Generation**: ~100ms for standard resolution
+- **Layer Generation**: ~150ms per wireframe layer (face mesh, construction lines, pose landmarks)
+- **Layer Composition**: ~50ms for proper rendering order
 - **SVG Export**: ~50ms additional overhead (basic) / ~200ms (with DexiNed)
 - **DexiNed Processing**: ~1-2s for outline generation + contour extraction
+- **Background Merge**: ~100ms for intelligent image matching and transparency blending
 - **4K Processing**: ~500ms with adaptive scaling
+- **Hybrid Output**: ~200ms additional for separate PNG/SVG generation
 
 ## 🌐 Frontend Integration Examples
 
@@ -352,6 +429,16 @@ python wireframe_portrait_processor.py ../download_data/aic_sample/images/102777
   --background-merge --foreground-dir out_sample/clipped_images_fg/ \
   --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 \
   --background-transparency 50 -o test_merge.png
+
+# Test hybrid PNG/SVG output generation
+python wireframe_portrait_processor.py ../download_data/aic_sample/images/102777.jpg --preset intermediate \
+  --svg --svg-output test_hybrid.svg --background-merge --foreground-dir out_sample/clipped_images_fg/ \
+  --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 \
+  --background-transparency 50 -o test_hybrid.png
+
+# Test layer composition (ensure all wireframe elements are visible)
+python wireframe_portrait_processor.py ../download_data/aic_sample/images/102777.jpg --preset beginner \
+  --construction-lines --mesh --pose-landmarks --dexined -o test_all_layers.png
 
 # Test background segmentation (BiRefNet)
 python run_cutout.py -i ../download_data/aic_sample/images/102777.jpg

@@ -24,6 +24,8 @@ This is a Portrait Outline Generator project that creates artistic wireframe por
 - **✅ High-Resolution Support** - 4K, 8K, and print quality (A4 300DPI) wireframe processing with adaptive scaling
 - **✅ MediaPipe Pose Landmarker Integration** - Body skeleton detection with 33 pose landmarks, filtered to exclude face/hand details (landmarks 0-10, 17-22)
 - **✅ Background Merge System** - Intelligent background image composition with adjustable transparency (0-100% scale), automatic image matching, and seamless integration with all wireframe features
+- **✅ Enhanced Layer System** - Complete layer composition architecture with proper rendering order: Background → Foreground → Face Mesh → Construction Lines → Pose Landmarks
+- **✅ Hybrid PNG/SVG Architecture** - Optimal output format combining PNG raster images for backgrounds with SVG vector wireframes for infinite scalability
 
 **Active Components:**
 - **Wireframe Portrait Processor** (`image_processing/wireframe_portrait_processor.py`) - Main system for generating wireframe portraits with configurable features
@@ -95,8 +97,13 @@ python wireframe_portrait_processor.py input.jpg --preset intermediate --backgro
 
 # Subtle wireframe overlay (semi-transparent blend)
 python wireframe_portrait_processor.py input.jpg --preset beginner --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 30 --background-transparency 80 -o subtle_overlay.png
-```
 
+# Hybrid PNG/SVG output (ENHANCED ARCHITECTURE)
+python wireframe_portrait_processor.py input.jpg --preset intermediate --svg --svg-output wireframes.svg --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 --background-transparency 50 -o complete_raster.png
+
+# Pure wireframe SVG for overlay applications
+python wireframe_portrait_processor.py input.jpg --preset beginner --svg --svg-output pure_wireframe.svg --foreground-transparency 100 --background-transparency 0 -o /dev/null
+```
 ### Data Operations
 ```bash
 # Download sample portrait data from AIC API
@@ -118,26 +125,39 @@ jupyter notebook face_landmark.ipynb
 # Requires: Virtual display running + GPU environment setup
 ```
 
+ python wireframe_portrait_processor.py ./out_sample/clipped_images_fg/864_fg.png --preset intermediate --background-merge --foreground-dir
+  ./out_sample/clipped_images_fg/ --background-dir ./out_sample/clipped_images_bg/ --foreground-transparency 50 --background-transparency 100 -o
+  half_transparent.png
+
 ## Architecture
 
 The wireframe portrait generation system follows a modular, feature-based architecture:
 
-### 🎯 **Wireframe Generation Pipeline**
+### 🎯 **Enhanced Wireframe Generation Pipeline**
 1. **Face Detection** (MediaPipe: GPU-accelerated landmark detection with 468 facial points)
 2. **Pose Detection** (MediaPipe: Body skeleton detection with 33 pose landmarks, filtered for body focus)
-3. **Construction Lines** (Classical portrait guidelines based on actual facial landmarks)
-4. **Face Mesh** (Detailed wireframe contours using MediaPipe connections)
-5. **Pose Skeleton** (Body structure wireframes excluding face and hand details)
-6. **Edge Detection** (DexiNed AI-powered outline generation with ROCm acceleration)
-7. **Background Composition** (Intelligent background image matching with independent foreground/background transparency control)
-8. **Vector Export** (SVG generation with infinite scalability and web integration)
-9. **High-Resolution Scaling** (Adaptive processing for 4K, 8K, and print quality)
+3. **Layer Generation** (Each wireframe component generated separately to prevent layer conflicts):
+   - **Face Mesh Layer** (Detailed wireframe contours using MediaPipe connections)
+   - **Construction Lines Layer** (Classical portrait guidelines based on actual facial landmarks)
+   - **Pose Landmarks Layer** (Body structure wireframes excluding face and hand details)
+   - **DexiNed Outline Layer** (AI-powered edge detection with ROCm acceleration)
+4. **Background Composition** (Intelligent background image matching with independent foreground/background transparency control)
+5. **Layer Composition** (Proper rendering order: Background → Foreground → Face Mesh → Construction Lines → Pose Landmarks)
+6. **Hybrid Output Generation**:
+   - **PNG Raster Output** (Complete composite with all layers for immediate viewing)
+   - **SVG Vector Export** (Pure wireframe layers for infinite scalability and web integration)
+7. **High-Resolution Scaling** (Adaptive processing for 4K, 8K, and print quality)
 
-### 🔧 **System Components**
+### 🔧 **Enhanced System Components**
+- **Separated Layer Architecture**: Each wireframe component (face mesh, construction lines, pose landmarks) generated independently to prevent conflicts
 - **Configurable Features**: Toggle construction lines, face mesh, pose landmarks, outlines, and background merge independently
 - **Preset System**: Beginner (all features), intermediate (lines + mesh + pose), advanced (lines + pose only)
 - **Background Integration**: Intelligent image matching with independent 0-100% foreground and background transparency control
-- **Multi-Format Output**: PNG, SVG, high-resolution variants
+- **Hybrid Output Formats**: 
+  - **PNG Raster**: Complete composite with all layers for immediate viewing
+  - **SVG Vector**: Pure wireframes for infinite scalability and web integration
+  - **High-Resolution Variants**: 4K, 8K, print quality support
+- **Advanced Layer Composition**: Proper rendering order ensures all wireframe elements are visible
 - **GPU Acceleration**: ROCm/CUDA support for MediaPipe and DexiNed processing
 - **Web Integration**: Standards-compliant SVG with zoom, animation, and interaction support
 
@@ -221,10 +241,69 @@ The wireframe portrait processor now supports advanced background merging with i
 - **Independent Control**: Foreground and background transparency work independently (0-100% each)
 - **Automatic Matching**: Intelligently matches foreground/background image pairs by filename
 
+## Hybrid PNG/SVG Architecture
+
+The system now supports a hybrid architecture combining PNG raster images for background content with SVG vector wireframes for infinite scalability and web integration.
+
+### 🎯 **Architecture Benefits**
+
+1. **Optimal Performance**: PNG handles complex background images efficiently while SVG provides crisp wireframes at any zoom level
+2. **Web Integration**: SVG wireframes can be overlaid on PNG backgrounds in web applications with CSS/JavaScript control
+3. **File Size Optimization**: Background imagery compressed as PNG, wireframes as lightweight vector data
+4. **Infinite Scalability**: Vector wireframes maintain quality at any resolution for drawing and design applications
+
+### 🔧 **Output Formats**
+
+#### PNG Raster Output (Complete Composite)
+- **Purpose**: Immediate viewing and traditional image workflows
+- **Content**: Background image + foreground image + all wireframe layers composited
+- **Usage**: Social media sharing, print output, image galleries
+- **File naming**: `output.png`, `complete_raster.png`
+
+#### SVG Vector Output (Pure Wireframes)
+- **Purpose**: Web integration, drawing applications, infinite zoom
+- **Content**: Only wireframe elements (construction lines, face mesh, pose landmarks, DexiNed outlines)
+- **Usage**: Interactive drawing tools, web overlays, design applications
+- **File naming**: `output.svg`, `complete_vector.svg`, `pure_wireframe.svg`
+
+#### Hybrid Workflow Components
+- **Background PNG**: `hybrid_background.png` (raster background image)
+- **Foreground PNG**: `hybrid_foreground.png` (raster portrait subject)
+- **Wireframe SVG**: `hybrid_wireframe.svg` (vector wireframe overlay)
+
+### 🎨 **Creative Applications**
+
+1. **Interactive Drawing Apps**: Load PNG background, overlay SVG wireframes with user zoom/pan controls
+2. **Progressive Reveal**: SVG animations showing wireframe construction step-by-step
+3. **Multi-Resolution Workflow**: Same SVG wireframes work across mobile, desktop, and print resolutions
+4. **Customizable Overlays**: CSS/JavaScript control of wireframe visibility, colors, and opacity
+
+### 💻 **Web Integration Example**
+
+```html
+<!-- Hybrid approach: PNG background + SVG overlay -->
+<div class="portrait-container">
+    <img src="hybrid_background.png" class="background-layer">
+    <img src="hybrid_foreground.png" class="foreground-layer">
+    <svg class="wireframe-overlay">
+        <!-- SVG wireframe content embedded or linked -->
+    </svg>
+</div>
+```
+
+### 📋 **Usage Recommendations**
+
+- **Static Viewing**: Use PNG output for social media, galleries, presentations
+- **Interactive Applications**: Use hybrid PNG+SVG for drawing tools, educational apps
+- **Print Workflows**: Use high-resolution PNG for traditional printing
+- **Web Applications**: Use SVG for responsive designs and interactive features
+
 ## Current Status & Future Enhancements
 
 ### ✅ **Production Ready**
 - Complete wireframe portrait generation system with preset configurations
+- **Enhanced Layer System**: Fixed architecture ensuring all wireframe elements render correctly with proper layer order
+- **Hybrid PNG/SVG Architecture**: Optimal output combining raster backgrounds with vector wireframes
 - SVG export with infinite scalability for web/mobile applications
 - **Enhanced DexiNed SVG Quality**: Production-grade edge outline processing with 300-700+ contours
 - **Independent Transparency Control**: Separate 0-100% transparency controls for foreground and background elements
@@ -232,6 +311,7 @@ The wireframe portrait processor now supports advanced background merging with i
 - High-resolution processing (4K, 8K, print quality) with adaptive scaling
 - GPU-accelerated processing with ROCm/CUDA support
 - Landmark-accurate construction lines based on MediaPipe face detection
+- **Fixed Layer Composition**: Resolved layer conflicts ensuring face mesh, construction lines, and pose landmarks all display properly
 
 ### 🔮 **Future Enhancements**
 - **Interactive Web Components**: React/Vue/Angular components for wireframe viewers
