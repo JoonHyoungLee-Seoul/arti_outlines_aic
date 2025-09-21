@@ -7,11 +7,11 @@ This interactive web demo showcases the complete **Hybrid PNG/SVG Architecture**
 1. **Start the demo server:**
    ```bash
    cd image_processing
-   python serve_demo.py
+   python demo_server_8081.py
    ```
 
 2. **Access the demo:**
-   - **URL**: `http://localhost:8080/wireframe_demo.html`
+   - **URL**: `http://localhost:8081/wireframe_demo_working.html`
    - **Mobile-friendly**: Responsive design for desktop and mobile devices
    - **CORS-enabled**: Local file access with proper security headers
 
@@ -61,27 +61,27 @@ This demo implements the **Hybrid PNG/SVG Architecture** described in the main p
 
 ```
 image_processing/
-├── wireframe_demo.html          # Interactive demo webpage
-├── serve_demo.py               # Production HTTP server with CORS
+├── wireframe_demo_working.html  # Interactive demo webpage (WORKING VERSION)
+├── demo_server_8081.py         # Production HTTP server on port 8081 with CORS
 ├── out_sample/                 # Sample portrait dataset
 │   ├── clipped_images_fg/     # Foreground portraits (6 samples)
 │   └── clipped_images_bg/     # Background images (6 samples)
-├── demo_layers/               # Separated wireframe SVG layers
-│   ├── *_construction_lines.svg # Drawing guidelines
-│   ├── *_face_mesh.svg         # Facial wireframes  
-│   └── *_pose_landmarks.svg    # Body skeleton wireframes
-└── beginner_output_svg/       # Complete wireframe composites
+└── beginner_output_svg/       # Composite wireframe SVG files (PRODUCTION READY)
+    ├── 15714_output.svg       # Complete wireframe composite with grouped layers
+    ├── 16151_output.svg       # All wireframe components in single file
+    └── ...                    # Additional portrait wireframes
 ```
 
-### Demo Layers Organization
+### Composite SVG Architecture (CONFIRMED WORKING)
 
-The `demo_layers/` directory contains **separated wireframe components** for the interactive demo:
+The `beginner_output_svg/` directory contains **composite SVG files** that work correctly in the demo:
 
-- **Pattern**: `{portrait_id}_{layer_type}.svg`
-- **Layer Types**:
-  - `construction_lines.svg` - Classical drawing guidelines
-  - `face_mesh.svg` - Detailed facial wireframes (468 landmarks)  
-  - `pose_landmarks.svg` - Body skeleton wireframes (33 landmarks)
+- **Pattern**: `{portrait_id}_output.svg`
+- **Architecture**: Single SVG file with grouped wireframe components:
+  - `<g id="construction-lines">` - Classical drawing guidelines
+  - `<g id="face-mesh">` - Detailed facial wireframes (468 landmarks)  
+  - `<g id="pose-landmarks">` - Body skeleton wireframes (33 landmarks)
+- **Group Control**: JavaScript controls visibility of each group within the composite SVG
 - **Sample IDs**: 15714, 16151, 16281, 16298, 8104, 864
 
 ## 🔧 Technical Details
@@ -98,9 +98,10 @@ The `demo_layers/` directory contains **separated wireframe components** for the
 
 ### Customization
 The demo code is fully customizable:
-- Modify `wireframe_demo.html` for UI changes
-- Adjust `serve_demo.py` for server configuration
+- Modify `wireframe_demo_working.html` for UI changes
+- Adjust `demo_server_8081.py` for server configuration  
 - Extend JavaScript for additional features
+- Use composite SVG approach for proper wireframe alignment
 
 ## 🎮 Controls Reference
 

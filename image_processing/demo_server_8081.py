@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Simple HTTP server for the wireframe demo
-Serves the demo and handles CORS for local file access
+Working wireframe demo server on port 8081
+Serves the wireframe demo with proper CORS and individual layer control
 """
 
 import http.server
@@ -26,17 +26,23 @@ def main():
     script_dir = Path(__file__).parent
     os.chdir(script_dir)
     
-    PORT = 8080
+    PORT = 8081
     
     print(f"""
-🎨 Wireframe Portrait Demo Server
-================================
+🎨 Working Wireframe Portrait Demo Server
+========================================
 
 Starting server on port {PORT}...
 
-Demo URL: http://localhost:{PORT}/wireframe_demo.html
+Demo URL: http://localhost:{PORT}/wireframe_demo_working.html
 
-Available sample images:
+Features:
+  ✓ Independent wireframe layer toggles
+  ✓ Real-time transparency controls
+  ✓ Separated SVG layer architecture
+  ✓ 6 sample portraits from AIC collection
+
+Available portraits:
 """)
     
     # List available sample images
@@ -47,13 +53,10 @@ Available sample images:
             print(f"  - Portrait {img_id}")
     
     print(f"""
-Controls available in demo:
-  ✓ Construction Lines toggle
-  ✓ Face Mesh toggle  
-  ✓ DexiNed Outlines toggle
-  ✓ Pose Landmarks toggle
-  ✓ Foreground transparency (0-100%)
-  ✓ Background transparency (0-100%)
+Layer files location: demo_layers/
+  - {img_id}_construction_lines.svg (red guidelines)
+  - {img_id}_face_mesh.svg (gray wireframes)  
+  - {img_id}_pose_landmarks.svg (body skeleton)
 
 Press Ctrl+C to stop the server
 """)

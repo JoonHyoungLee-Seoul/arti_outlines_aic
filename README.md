@@ -6,7 +6,7 @@ A complete system for generating artistic wireframe portraits from artworks usin
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-GPU-green.svg)](https://mediapipe.dev)
 [![ROCm](https://img.shields.io/badge/ROCm-6.1-red.svg)](https://rocm.docs.amd.com)
 [![SVG](https://img.shields.io/badge/Export-SVG-orange.svg)](https://www.w3.org/Graphics/SVG/)
-[![Demo](https://img.shields.io/badge/Demo-Interactive_Web-brightgreen.svg)](http://localhost:8080/wireframe_demo.html)
+[![Demo](https://img.shields.io/badge/Demo-Interactive_Web-brightgreen.svg)](http://localhost:8081/wireframe_demo_working.html)
 [![Dataset](https://img.shields.io/badge/Dataset-AIC_298_Portraits-lightblue.svg)](https://www.artic.edu/)
 
 ## ✨ Features
@@ -98,9 +98,9 @@ Experience the wireframe generation system with our interactive web demo:
 
 ```bash
 cd image_processing
-python serve_demo.py
+python demo_server_8081.py
 
-# Open in browser: http://localhost:8080/wireframe_demo.html
+# Open in browser: http://localhost:8081/wireframe_demo_working.html
 ```
 
 ### Demo Features
@@ -210,8 +210,8 @@ graph TD
 - **`wireframe_portrait_processor.py`**: Main processing system with enhanced layer composition and preset configurations
 - **`svg_generator.py`**: SVG export with infinite scalability and web integration
 - **`high_resolution_wireframe_processor.py`**: 4K/8K processing with adaptive scaling
-- **`wireframe_demo.html`**: Interactive web demo with real-time wireframe controls
-- **`serve_demo.py`**: Production HTTP server with CORS for demo hosting
+- **`wireframe_demo_working.html`**: Interactive web demo with real-time wireframe controls and composite SVG architecture
+- **`demo_server_8081.py`**: Production HTTP server on port 8081 with CORS for demo hosting
 
 ## 🔄 Hybrid PNG/SVG Architecture
 

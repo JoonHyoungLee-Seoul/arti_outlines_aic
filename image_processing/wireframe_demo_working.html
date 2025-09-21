@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe Portrait Demo - Working Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .demo-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            height: fit-content;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .feature-toggle {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .feature-toggle:hover {
+            background-color: #e9ecef;
+        }
+
+        .toggle-btn {
+            width: 50px;
+            height: 25px;
+            background: #ddd;
+            border-radius: 25px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 12px;
+        }
+
+        .toggle-btn.active {
+            background: #3498db;
+        }
+
+        .toggle-btn::after {
+            content: '';
+            width: 21px;
+            height: 21px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-btn.active::after {
+            transform: translateX(25px);
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 600px;
+        }
+
+        .portrait-canvas {
+            position: relative;
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        .layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.3s ease;
+        }
+
+
+        .background-layer { z-index: 1; }
+        .foreground-layer { z-index: 2; }
+        .svg-overlay { z-index: 3; pointer-events: none; }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        @media (max-width: 768px) {
+            .demo-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Wireframe Portrait Demo</h1>
+            <p>Interactive demo with real-time wireframe controls</p>
+        </div>
+
+        <div class="demo-layout">
+            <div class="controls">
+                <div class="control-group">
+                    <h3>Portrait Selection</h3>
+                    <select id="portraitSelect" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                        <option value="16151">Portrait 16151</option>
+                        <option value="15714">Portrait 15714</option>
+                        <option value="16281">Portrait 16281</option>
+                        <option value="16298">Portrait 16298</option>
+                        <option value="8104">Portrait 8104</option>
+                        <option value="864">Portrait 864</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <h3>Wireframe Features</h3>
+                    
+                    <div class="feature-toggle">
+                        <div class="toggle-btn active" onclick="toggleFeature('construction_lines', this)"></div>
+                        <span>Construction Lines</span>
+                    </div>
+                    
+                    <div class="feature-toggle">
+                        <div class="toggle-btn active" onclick="toggleFeature('face_mesh', this)"></div>
+                        <span>Face Mesh</span>
+                    </div>
+                    
+                    <div class="feature-toggle">
+                        <div class="toggle-btn active" onclick="toggleFeature('pose_landmarks', this)"></div>
+                        <span>Pose Landmarks</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Transparency</h3>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Foreground</span>
+                            <span id="foregroundValue">100%</span>
+                        </div>
+                        <input type="range" class="slider" id="foregroundSlider" min="0" max="100" value="100" 
+                               oninput="updateTransparency('foreground', this.value)">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Background</span>
+                            <span id="backgroundValue">30%</span>
+                        </div>
+                        <input type="range" class="slider" id="backgroundSlider" min="0" max="100" value="30" 
+                               oninput="updateTransparency('background', this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="portrait-canvas" id="portraitCanvas">
+                    <div class="loading">Loading portrait...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h4>🎯 How to Use</h4>
+            <p>
+                Toggle wireframe features independently using the switches. Adjust transparency with sliders. 
+                This demo showcases the separated layer architecture with real-time controls.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        class WireframeDemo {
+            constructor() {
+                this.currentImage = '16151';
+                this.features = {
+                    construction_lines: true,
+                    face_mesh: true,
+                    pose_landmarks: true
+                };
+                this.transparency = {
+                    foreground: 100,
+                    background: 30
+                };
+                
+                this.initializeDemo();
+            }
+
+            async initializeDemo() {
+                document.getElementById('portraitSelect').addEventListener('change', (e) => {
+                    this.loadPortrait(e.target.value);
+                });
+                
+                await this.loadPortrait(this.currentImage);
+            }
+
+            async loadPortrait(imageId) {
+                this.currentImage = imageId;
+                const canvas = document.getElementById('portraitCanvas');
+                
+                try {
+                    canvas.innerHTML = '<div class="loading">Loading portrait...</div>';
+                    
+                    const layersHTML = await this.createPortraitLayers(imageId);
+                    canvas.innerHTML = layersHTML;
+                    
+                    // Apply current settings
+                    this.updateDisplay();
+                } catch (error) {
+                    console.error('Error loading image:', error);
+                    canvas.innerHTML = '<div class="loading">Error loading portrait. Please try another image.</div>';
+                }
+            }
+
+            async createPortraitLayers(imageId) {
+                const backgroundPath = `out_sample/clipped_images_bg/${imageId}_bg.png`;
+                const foregroundPath = `out_sample/clipped_images_fg/${imageId}_fg.png`;
+                const svgPath = `beginner_output_svg/${imageId}_output.svg`;
+
+                return `
+                    <img src="${backgroundPath}" 
+                         class="layer background-layer" 
+                         id="backgroundLayer"
+                         style="opacity: ${this.transparency.background / 100}"
+                         onload="
+                            this.parentElement.style.width = this.naturalWidth + 'px'; 
+                            this.parentElement.style.height = this.naturalHeight + 'px';
+                            console.log('Canvas size set to:', this.naturalWidth, 'x', this.naturalHeight);
+                         ">
+                    
+                    <img src="${foregroundPath}" 
+                         class="layer foreground-layer" 
+                         id="foregroundLayer"
+                         style="opacity: ${this.transparency.foreground / 100}">
+                    
+                    <div class="layer svg-overlay" id="svgOverlay">
+                        <object data="${svgPath}" 
+                                type="image/svg+xml" 
+                                width="100%" 
+                                height="100%"
+                                style="pointer-events: none;"
+                                onload="if(window.demoInstance) window.demoInstance.updateSVGFeatures()">
+                        </object>
+                    </div>
+                `;
+            }
+
+            toggleFeature(feature, toggleElement) {
+                this.features[feature] = !this.features[feature];
+                toggleElement.classList.toggle('active');
+                this.updateDisplay();
+            }
+
+            updateTransparency(type, value) {
+                this.transparency[type] = parseInt(value);
+                
+                const valueElement = document.getElementById(type + 'Value');
+                if (valueElement) {
+                    valueElement.textContent = value + '%';
+                }
+                
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                // Update background opacity
+                const backgroundLayer = document.getElementById('backgroundLayer');
+                if (backgroundLayer) {
+                    backgroundLayer.style.opacity = this.transparency.background / 100;
+                }
+
+                // Update foreground opacity
+                const foregroundLayer = document.getElementById('foregroundLayer');
+                if (foregroundLayer) {
+                    foregroundLayer.style.opacity = this.transparency.foreground / 100;
+                }
+
+                // Update SVG wireframe visibility
+                this.updateSVGFeatures();
+            }
+
+            updateSVGFeatures() {
+                const svgOverlay = document.getElementById('svgOverlay');
+                if (!svgOverlay) return;
+
+                const svgObject = svgOverlay.querySelector('object');
+                if (!svgObject) return;
+
+                // Wait for SVG to load
+                svgObject.addEventListener('load', () => {
+                    try {
+                        const svgDoc = svgObject.contentDocument;
+                        if (!svgDoc) return;
+
+                        // Remove white background rectangle for transparency
+                        const backgroundRect = svgDoc.querySelector('rect[fill="white"]');
+                        if (backgroundRect) {
+                            backgroundRect.style.opacity = '0';
+                        }
+
+                        // Control different wireframe components based on feature toggles
+                        this.toggleSVGGroups(svgDoc);
+                        
+                    } catch (e) {
+                        console.log('Cannot access SVG content - using fallback method');
+                        // Fallback: control overall visibility
+                        const anyFeatureEnabled = Object.values(this.features).some(enabled => enabled);
+                        svgObject.style.opacity = anyFeatureEnabled ? '1' : '0';
+                    }
+                });
+
+                // Trigger update if already loaded
+                if (svgObject.contentDocument) {
+                    svgObject.dispatchEvent(new Event('load'));
+                }
+            }
+
+            toggleSVGGroups(svgDoc) {
+                // Control specific wireframe groups based on feature toggles
+                
+                // Construction Lines Group
+                const constructionGroup = svgDoc.getElementById('construction-lines');
+                if (constructionGroup) {
+                    constructionGroup.style.display = this.features.construction_lines ? 'block' : 'none';
+                }
+                
+                // Face Mesh Group
+                const faceMeshGroup = svgDoc.getElementById('face-mesh');
+                if (faceMeshGroup) {
+                    faceMeshGroup.style.display = this.features.face_mesh ? 'block' : 'none';
+                }
+                
+                // Pose Landmarks Group
+                const poseLandmarksGroup = svgDoc.getElementById('pose-landmarks');
+                if (poseLandmarksGroup) {
+                    poseLandmarksGroup.style.display = this.features.pose_landmarks ? 'block' : 'none';
+                }
+                
+                console.log('SVG features updated:', {
+                    construction_lines: this.features.construction_lines,
+                    face_mesh: this.features.face_mesh,
+                    pose_landmarks: this.features.pose_landmarks
+                });
+            }
+        }
+
+        // Global functions for inline event handlers
+        let demoInstance;
+
+        function toggleFeature(feature, toggleElement) {
+            if (demoInstance) {
+                demoInstance.toggleFeature(feature, toggleElement);
+            }
+        }
+
+        function updateTransparency(type, value) {
+            if (demoInstance) {
+                demoInstance.updateTransparency(type, value);
+            }
+        }
+
+        // Initialize demo when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            demoInstance = new WireframeDemo();
+        });
+    </script>
+</body>
+</html>

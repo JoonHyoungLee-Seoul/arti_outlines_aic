@@ -36,8 +36,8 @@ This is a Portrait Outline Generator project that creates artistic wireframe por
 - **Data Download Tool** (`download_data/aic_portrait_paintings_downloader.py`) - Automated portrait data acquisition from AIC API
 - **MediaPipe Face Landmarks** (`mediapipe_practice/face_landmark.ipynb`) - GPU-accelerated face landmark detection with RGBA transparency support
 - **GPU Acceleration Scripts** - Complete virtual display and ROCm configuration for optimal performance
-- **Interactive Demo Server** (`image_processing/serve_demo.py`) - Production-ready HTTP server with CORS for web demo hosting
-- **Web Demo Interface** (`image_processing/wireframe_demo.html`) - Interactive web application with real-time wireframe controls and transparency management
+- **Interactive Demo Server** (`image_processing/demo_server_8081.py`) - Production-ready HTTP server on port 8081 with CORS for web demo hosting
+- **Web Demo Interface** (`image_processing/wireframe_demo_working.html`) - Interactive web application with real-time wireframe controls, composite SVG architecture, and transparency management
 
 ## Common Development Commands
 
@@ -69,10 +69,10 @@ rocm-smi --showproductname --showtemp
 ```bash
 # Start the interactive demo server
 cd image_processing
-python serve_demo.py
+python demo_server_8081.py
 
-# Access demo at: http://localhost:8080/wireframe_demo.html
-# Features: 6 sample portraits, real-time wireframe toggles, transparency controls
+# Access demo at: http://localhost:8081/wireframe_demo_working.html
+# Features: 6 sample portraits, real-time wireframe toggles, transparency controls, composite SVG architecture
 ```
 
 ### Wireframe Portrait Generation
