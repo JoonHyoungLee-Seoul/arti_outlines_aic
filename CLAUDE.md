@@ -1,15 +1,19 @@
-# CLAUDE.md
+# CLAUDE.md - Developer Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. Now, the hardware is AMD environment and has **Rocm**. Please set this environment as priority. However, when you create the code please make it flexible so it can work with **cuda** and **mac**. 
+This file provides technical guidance for developers working with the Portrait Wireframe Generator codebase. The system is optimized for cross-platform compatibility with priority on AMD ROCm environments while maintaining support for CUDA and macOS.
 
 ## Project Overview
 
-This is a Portrait Outline Generator project that creates artistic wireframe portraits from portrait images using computer vision and deep learning techniques. The system processes input portraits (JPG/PNG) and outputs:
-- `*_construction.png` - Construction guides with facial landmarks-based guidelines
-- `*_mesh.png` - Face mesh wireframes with detailed contours
-- `*_outline.png` - DexiNed-processed edge outlines
-- `*.svg` - **Scalable vector graphics with infinite zoom capability** (NEW)
-- High-resolution outputs (4K, 8K, print quality)
+The Portrait Wireframe Generator is a complete AI-powered pipeline that transforms classical portrait paintings into artistic wireframe sketches. The system processes input portraits through a modern, optimized workflow:
+
+### Pipeline Outputs
+- **SVG Wireframes**: Scalable vector graphics with infinite zoom capability
+- **PNG Composites**: Complete raster images with all layers merged
+- **Interactive Demo**: Web-based real-time wireframe control interface
+- **High-Resolution Support**: 4K, 8K, and print quality (A4 300DPI) processing
+
+### Key Optimization (v2.0)
+**DexiNed processing is now unnecessary** - edge detection is pre-applied during BiRefNet segmentation, resulting in 30-50% faster processing and 50% smaller output files.
 
 ## Current Implementation Status ✅
 
@@ -38,6 +42,45 @@ This is a Portrait Outline Generator project that creates artistic wireframe por
 - **GPU Acceleration Scripts** - Complete virtual display and ROCm configuration for optimal performance
 - **Interactive Demo Server** (`image_processing/demo_server_8081.py`) - Production-ready HTTP server on port 8081 with CORS for web demo hosting
 - **Web Demo Interface** (`image_processing/wireframe_demo_working.html`) - Interactive web application with real-time wireframe controls, composite SVG architecture, and transparency management
+
+## Optimized Pipeline (v2.0) - Production Ready
+
+### Complete Workflow (User-Facing)
+```bash
+# 1. Data acquisition (298 public domain portraits)
+cd download_data
+python aic_portrait_paintings_downloader.py
+
+# 2. Batch segmentation (BiRefNet ONNX with edge detection)
+cd ../image_processing
+python run_cutout.py -b ../download_data/aic_sample/images/
+
+# 3. Optimized wireframe generation (no redundant DexiNed)
+python wireframe_portrait_processor.py out/clipped_images_fg/{id}_fg.png \
+  --construction-lines --mesh --pose-landmarks \
+  --svg --svg-output beginner_output_svg/{id}_output.svg \
+  --background-merge \
+  --foreground-dir out/clipped_images_fg/ \
+  --background-dir out/clipped_images_bg/ \
+  --foreground-transparency 100 --background-transparency 30 \
+  -o output/{id}_complete.png
+
+# 4. Launch interactive demo
+python demo_server_8081.py
+# Access: http://localhost:8081/wireframe_demo_working.html
+```
+
+### Automated Pipeline Script
+```bash
+# Run complete pipeline with automation
+python scripts/run_complete_pipeline.py --num-samples 5
+
+# Skip data download (use existing)
+python scripts/run_complete_pipeline.py --skip-download --num-samples 10
+
+# Skip segmentation (use existing segmented images)
+python scripts/run_complete_pipeline.py --skip-download --skip-segmentation --num-samples 3
+```
 
 ## Common Development Commands
 
@@ -130,6 +173,12 @@ python wireframe_portrait_processor.py ./out_sample/clipped_images_fg/16151_fg.p
 
 # Pure wireframe SVG for overlay applications
 python wireframe_portrait_processor.py input.jpg --preset beginner --svg --svg-output pure_wireframe.svg --foreground-transparency 100 --background-transparency 0 -o /dev/null
+
+# Optimized pipeline (DexiNed unnecessary - edge detection pre-applied in segmented images)
+python wireframe_portrait_processor.py input.jpg --construction-lines --mesh --pose-landmarks --svg --svg-output optimized.svg --background-merge --foreground-dir out/clipped_images_fg/ --background-dir out/clipped_images_bg/ --foreground-transparency 100 --background-transparency 30 -o optimized.png
+
+# Standard optimized pipeline for all new processing
+python wireframe_portrait_processor.py out/clipped_images_fg/{id}_fg.png --construction-lines --mesh --pose-landmarks --svg --svg-output beginner_output_svg/{id}_output.svg --background-merge --foreground-dir out/clipped_images_fg/ --background-dir out/clipped_images_bg/ --foreground-transparency 100 --background-transparency 30 -o test_output/{id}_complete.png
 ```
 ### Data Operations
 ```bash

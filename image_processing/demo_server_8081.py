@@ -40,7 +40,7 @@ Features:
   ✓ Independent wireframe layer toggles
   ✓ Real-time transparency controls
   ✓ Separated SVG layer architecture
-  ✓ 6 sample portraits from AIC collection
+  ✓ 10 sample portraits from AIC collection (6 original + 4 optimized pipeline without redundant DexiNed)
 
 Available portraits:
 """)

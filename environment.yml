@@ -1,0 +1,24 @@
+name: portrait_outline
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - numpy
+  - opencv
+  - scikit-image
+  - matplotlib
+  - pillow
+  - requests
+  - tqdm
+  - pip:
+    - mediapipe>=0.10.0
+    - onnxruntime>=1.15.0
+    - onnx>=1.14.0
+    - opencv-python>=4.8.0
+    - scikit-image>=0.21.0
+    - numpy>=1.24.0
+    - pillow>=10.0.0
+    - requests>=2.31.0
+    - tqdm>=4.65.0

@@ -74,7 +74,13 @@ models/*.h5
 models/*.pb
 *.onnx
 
-# Output directories
+# Generated data and outputs
+download_data/aic_sample/images/
+download_data/aic_sample/metadata.jsonl
+download_data/aic_sample/curator_cards.md
+image_processing/out/
+image_processing/test_output/
+image_processing/output/
 out/
 outputs/
 results/
