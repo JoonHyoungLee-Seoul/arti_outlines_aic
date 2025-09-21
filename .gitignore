@@ -58,6 +58,8 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
+mediapipe_practice/
+
 # Node.js
 node_modules/
 npm-debug.log*
