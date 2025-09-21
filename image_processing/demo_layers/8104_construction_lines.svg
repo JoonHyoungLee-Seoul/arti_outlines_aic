@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="843" height="1169" viewBox="0 0 843 1169">
+  
+  <g id="construction-lines">
+    <line id="center-line-0" x1="383" y1="331" x2="389" y2="382" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+    <line id="center-line-1" x1="389" y1="382" x2="394" y2="423" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+    <line id="center-line-2" x1="394" y1="423" x2="403" y2="506" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+    <line id="eyebrow-line-0" x1="337" y1="372" x2="435" y2="358" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+    <line id="eye-line-outer-0" x1="344" y1="392" x2="430" y2="381" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+    <line id="eye-line-inner-0" x1="371" y1="390" x2="405" y2="386" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+    <line id="eye-line-left-0" x1="358" y1="395" x2="355" y2="385" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+    <line id="eye-line-right-0" x1="419" y1="387" x2="420" y2="376" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+    <line id="nose-line-0" x1="376" y1="428" x2="411" y2="423" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+    <line id="mouth-line-0" x1="376" y1="460" x2="421" y2="452" stroke="rgb(255, 0, 0)" stroke-width="2"/>
+  </g>
+  <desc>Wireframe Portrait - Generated with settings: {'features': ['construction_lines'], 'timestamp': '2025-09-20T21:00:31.743373', 'resolution': '843x1169'}</desc>
+  <metadata>
+    <meta name="features" content="['construction_lines']"/>
+    <meta name="timestamp" content="2025-09-20T21:00:31.743373"/>
+    <meta name="resolution" content="843x1169"/>
+  </metadata>
+</svg>

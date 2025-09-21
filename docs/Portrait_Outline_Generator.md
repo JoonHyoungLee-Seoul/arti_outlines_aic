@@ -33,3 +33,39 @@
     - *_construction.png: 세로선 + 눈선 가이드
     - *_outline.png: 단순 윤곽선
     - *_outline.svg: 벡터 형식 (선택)
+
+## 산출물 (Outputs)
+- Construction Sheet: 얼굴 중심선 + 눈높이선 (밑그림 가이드)
+- Outline PNG: 단순화된 윤곽선 이미지
+- Outline SVG: 확대/편집 가능한 벡터 라인
+
+## 설치 (Setup)
+``` bash
+# 환경 생성
+conda create -n portrait_outline python=3.10 -y
+conda activate portrait_outline
+
+# 필수
+pip install opencv-python mediapipe numpy
+
+# 선택 (thinning, SVG 후처리)
+pip install scikit-image
+```
+
+## 사용예시 (Usage)
+``` bash
+# 기본 실행
+python portrait_outline_constructor.py --input my_portrait.jpg
+
+# SVG도 생성 + 작은 조각 더 강하게 제거
+python portrait_outline_constructor.py --input my_portrait.jpg --svg --min_component 220
+
+# 단순화 강도를 높이고 곡선 스무딩 2회 적용
+python portrait_outline_constructor.py --input my_portrait.jpg --svg --dp_ratio 0.015 --smooth_iters 2
+```
+
+## 활용 포인트 (Applications)
+- 미술 학습: 초보자가 초상화 비례·구도를 쉽게 연습
+- 창의 활동: 라인 베이스 위에 자유롭게 색/스타일 추가
+- 교육/상업 서비스: 인쇄용 워크시트, 디지털 드로잉 앱의 밑그림 제공
+- 확장 가능성: ControlSketch 등 스타일 모델과 결합 → 형태는 유지 + 화풍은 변화

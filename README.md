@@ -1,11 +1,12 @@
 # 🎨 Portrait Wireframe Generator
 
-A complete system for generating artistic wireframe portraits from artworks using computer vision and deep learning. Features enhanced layer composition, hybrid PNG/SVG architecture, flexible configuration, and background merge capabilities for modern web applications and art education.
+A complete system for generating artistic wireframe portraits from artworks using computer vision and deep learning. Features an interactive web demo, enhanced layer composition, hybrid PNG/SVG architecture, flexible configuration, and background merge capabilities for modern web applications and art education.
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-GPU-green.svg)](https://mediapipe.dev)
 [![ROCm](https://img.shields.io/badge/ROCm-6.1-red.svg)](https://rocm.docs.amd.com)
 [![SVG](https://img.shields.io/badge/Export-SVG-orange.svg)](https://www.w3.org/Graphics/SVG/)
+[![Demo](https://img.shields.io/badge/Demo-Interactive_Web-brightgreen.svg)](http://localhost:8080/wireframe_demo.html)
 [![Dataset](https://img.shields.io/badge/Dataset-AIC_298_Portraits-lightblue.svg)](https://www.artic.edu/)
 
 ## ✨ Features
@@ -27,10 +28,12 @@ A complete system for generating artistic wireframe portraits from artworks usin
 - **Edge Outlines**: AI-powered DexiNed edge detection with enhanced SVG quality and GPU acceleration
 - **Background Composition**: Intelligent image matching with 0-100% transparency control for both layers
 
-### 🌐 **Web Integration**
+### 🌐 **Web Integration & Interactive Demo**
+- **Interactive Web Demo**: Complete browser-based demo with real-time wireframe controls
 - **Infinite Scalability**: Vector SVG format perfect for zoom functionality
-- **Interactive Elements**: Individual wireframe components for CSS/JS control
-- **Responsive Design**: Automatically adapts to different screen sizes
+- **Layer-based Controls**: Independent toggle for each wireframe component
+- **Transparency Management**: Real-time foreground/background opacity sliders
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Animation Ready**: Built-in support for CSS animations and transitions
 
 ## 🚀 Quick Start
@@ -88,6 +91,31 @@ python wireframe_portrait_processor.py input.jpg --preset intermediate --svg --s
   --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 \
   --background-transparency 50 -o complete_raster.png
 ```
+
+## 🌐 Interactive Web Demo
+
+Experience the wireframe generation system with our interactive web demo:
+
+```bash
+cd image_processing
+python serve_demo.py
+
+# Open in browser: http://localhost:8080/wireframe_demo.html
+```
+
+### Demo Features
+- **6 Sample Portraits**: High-quality portraits from Art Institute of Chicago collection
+- **Real-time Controls**: Toggle wireframe features independently
+- **Transparency Sliders**: Control foreground (0-100%) and background (0-100%) opacity  
+- **Layer Management**: Face mesh, construction lines, pose landmarks, DexiNed outlines
+- **Responsive Design**: Works on desktop and mobile devices
+
+### Creative Use Cases
+- **Drawing Practice**: Set foreground to 0%, background to 100% for tracing templates
+- **Structure Analysis**: Set background to 0%, wireframes visible for studying proportions
+- **Artistic Blends**: Partial transparency on both layers for artistic reference
+
+See `image_processing/DEMO_README.md` for complete demo documentation.
 
 ## 📚 Documentation
 
@@ -182,6 +210,8 @@ graph TD
 - **`wireframe_portrait_processor.py`**: Main processing system with enhanced layer composition and preset configurations
 - **`svg_generator.py`**: SVG export with infinite scalability and web integration
 - **`high_resolution_wireframe_processor.py`**: 4K/8K processing with adaptive scaling
+- **`wireframe_demo.html`**: Interactive web demo with real-time wireframe controls
+- **`serve_demo.py`**: Production HTTP server with CORS for demo hosting
 
 ## 🔄 Hybrid PNG/SVG Architecture
 
@@ -459,10 +489,11 @@ This project uses public domain artwork from the Art Institute of Chicago and op
 ## 📞 Support
 
 For technical support and feature requests:
-- Check `image_processing/SVG_EXPORT_DOCUMENTATION.md` for comprehensive SVG integration guide
-- Review `CLAUDE.md` for complete development environment setup and feature documentation
-- GPU acceleration setup documented in `scripts/setup/install_gpu_support.sh`
-- Background merge functionality detailed in CLI help: `python wireframe_portrait_processor.py --help`
+- **Demo Documentation**: `image_processing/DEMO_README.md` for interactive web demo setup and usage
+- **SVG Integration**: `image_processing/SVG_EXPORT_DOCUMENTATION.md` for comprehensive SVG integration guide
+- **Development Guide**: `CLAUDE.md` for complete development environment setup and feature documentation
+- **GPU Setup**: `scripts/setup/install_gpu_support.sh` for ROCm/CUDA acceleration configuration
+- **CLI Reference**: `python wireframe_portrait_processor.py --help` for complete command documentation
 
 ## 📊 Dataset Information
 

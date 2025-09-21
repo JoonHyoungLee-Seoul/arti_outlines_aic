@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="843" height="1156" viewBox="0 0 843 1156">
+  
+  <g id="pose-landmarks" class="wireframe-pose">
+    <g id="pose-connections">
+      <line x1="803.9376003742218" y1="827.8495395183563" x2="147.69808486104012" y2="827.3386240005493" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="803.9376003742218" y1="827.8495395183563" x2="719.680440723896" y2="1752.827736377716" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="147.69808486104012" y1="827.3386240005493" x2="250.56122642755508" y2="1726.469181060791" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="719.680440723896" y1="1752.827736377716" x2="250.56122642755508" y2="1726.469181060791" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="803.9376003742218" y1="827.8495395183563" x2="808.934535741806" y2="1351.0184168815613" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="808.934535741806" y1="1351.0184168815613" x2="559.992911696434" y2="1532.328863620758" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="147.69808486104012" y1="827.3386240005493" x2="98.69241294264793" y2="1385.2696695327759" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="98.69241294264793" y1="1385.2696695327759" x2="193.23849204182625" y2="1193.3189506530762" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="719.680440723896" y1="1752.827736377716" x2="698.2890070080757" y2="2560.325750350952" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="698.2890070080757" y1="2560.325750350952" x2="671.2110017538071" y2="3223.49808883667" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="671.2110017538071" y1="3223.49808883667" x2="695.364497423172" y2="3333.5416431427" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="671.2110017538071" y1="3223.49808883667" x2="526.1835549473763" y2="3363.2829208374023" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="250.56122642755508" y1="1726.469181060791" x2="278.31610518693924" y2="2469.3233938217163" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="278.31610518693924" y1="2469.3233938217163" x2="266.4206475019455" y2="3178.2409648895264" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="266.4206475019455" y1="3178.2409648895264" x2="262.11827248334885" y2="3291.543354034424" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="266.4206475019455" y1="3178.2409648895264" x2="301.9264841079712" y2="3340.0278930664062" stroke="rgb(255, 165, 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="pose-points">
+      <circle cx="803.9376003742218" cy="827.8495395183563" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="147.69808486104012" cy="827.3386240005493" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="808.934535741806" cy="1351.0184168815613" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="98.69241294264793" cy="1385.2696695327759" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="559.992911696434" cy="1532.328863620758" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="193.23849204182625" cy="1193.3189506530762" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="719.680440723896" cy="1752.827736377716" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="250.56122642755508" cy="1726.469181060791" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="698.2890070080757" cy="2560.325750350952" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="278.31610518693924" cy="2469.3233938217163" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="671.2110017538071" cy="3223.49808883667" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="266.4206475019455" cy="3178.2409648895264" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="695.364497423172" cy="3333.5416431427" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="262.11827248334885" cy="3291.543354034424" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="526.1835549473763" cy="3363.2829208374023" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+      <circle cx="301.9264841079712" cy="3340.0278930664062" r="4" fill="rgb(255, 0, 0)" stroke="none"/>
+    </g>
+  </g>
+  <desc>Wireframe Portrait - Generated with settings: {'features': ['pose_landmarks'], 'timestamp': '2025-09-20T21:00:31.175453', 'resolution': '843x1156'}</desc>
+  <metadata>
+    <meta name="features" content="['pose_landmarks']"/>
+    <meta name="timestamp" content="2025-09-20T21:00:31.175453"/>
+    <meta name="resolution" content="843x1156"/>
+  </metadata>
+</svg>

@@ -14,4 +14,5 @@ Please review the update of the code in $ARGUMENTS and update docs based on spec
 - Context Aware: Uses git history and project structure for better suggestions
 - Flexible Usage: Handles various scenarios from specific changes to comprehensive reviews
 - Multi-language Support: Works with Node.js, Python, Rust, Go, and other project types
+
 - Error Handling: Graceful handling of missing files or repositories

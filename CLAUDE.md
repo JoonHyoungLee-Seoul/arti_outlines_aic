@@ -26,6 +26,7 @@ This is a Portrait Outline Generator project that creates artistic wireframe por
 - **✅ Background Merge System** - Intelligent background image composition with adjustable transparency (0-100% scale), automatic image matching, and seamless integration with all wireframe features
 - **✅ Enhanced Layer System** - Complete layer composition architecture with proper rendering order: Background → Foreground → Face Mesh → Construction Lines → Pose Landmarks
 - **✅ Hybrid PNG/SVG Architecture** - Optimal output format combining PNG raster images for backgrounds with SVG vector wireframes for infinite scalability
+- **✅ Interactive Web Demo** - Complete web-based demonstration with real-time wireframe controls, transparency sliders, and responsive design for all devices
 
 **Active Components:**
 - **Wireframe Portrait Processor** (`image_processing/wireframe_portrait_processor.py`) - Main system for generating wireframe portraits with configurable features
@@ -35,6 +36,8 @@ This is a Portrait Outline Generator project that creates artistic wireframe por
 - **Data Download Tool** (`download_data/aic_portrait_paintings_downloader.py`) - Automated portrait data acquisition from AIC API
 - **MediaPipe Face Landmarks** (`mediapipe_practice/face_landmark.ipynb`) - GPU-accelerated face landmark detection with RGBA transparency support
 - **GPU Acceleration Scripts** - Complete virtual display and ROCm configuration for optimal performance
+- **Interactive Demo Server** (`image_processing/serve_demo.py`) - Production-ready HTTP server with CORS for web demo hosting
+- **Web Demo Interface** (`image_processing/wireframe_demo.html`) - Interactive web application with real-time wireframe controls and transparency management
 
 ## Common Development Commands
 
@@ -62,17 +65,33 @@ source scripts/runtime/setup_gpu_env.sh
 rocm-smi --showproductname --showtemp
 ```
 
+### Interactive Web Demo
+```bash
+# Start the interactive demo server
+cd image_processing
+python serve_demo.py
+
+# Access demo at: http://localhost:8080/wireframe_demo.html
+# Features: 6 sample portraits, real-time wireframe toggles, transparency controls
+```
+
 ### Wireframe Portrait Generation
 ```bash
 # Generate wireframe portrait with preset configuration
 cd image_processing
 python wireframe_portrait_processor.py input.jpg --preset beginner -o output.png
 
+python wireframe_portrait_processor.py ./out_sample/clipped_images_fg/16151_fg.png --preset beginner -o output.png
+
 # Generate with SVG export for web integration
 python wireframe_portrait_processor.py input.jpg --preset intermediate --svg --svg-output output.svg -o output.png
 
+python wireframe_portrait_processor.py ./out_sample/clipped_images_fg/16151_fg.png --preset intermediate --svg --svg-output output.svg -o output.png
+
 # SVG-only output for frontend applications
 python wireframe_portrait_processor.py input.jpg --preset advanced --output-format svg -o output.svg
+
+python wireframe_portrait_processor.py ./out_sample/clipped_images_fg/16151_fg.png --preset advanced --output-format svg -o output.svg
 
 # High-quality SVG with DexiNed outline (production ready)
 python wireframe_portrait_processor.py input.jpg --preset beginner --svg --svg-output high_quality.svg -o output.png
@@ -92,14 +111,22 @@ python wireframe_portrait_processor.py input.jpg --preset intermediate --backgro
 # Creative drawing practice mode (white silhouette for tracing)
 python wireframe_portrait_processor.py input.jpg --preset intermediate --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 0 --background-transparency 100 -o drawing_practice.png
 
+python wireframe_portrait_processor.py ./out_sample/clipped_images_fg/16151_fg.png --preset intermediate --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 0 --background-transparency 0 -o drawing_practice.png
+
 # Wireframe only (no background)
 python wireframe_portrait_processor.py input.jpg --preset intermediate --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 --background-transparency 0 -o wireframe_only.png
 
 # Subtle wireframe overlay (semi-transparent blend)
 python wireframe_portrait_processor.py input.jpg --preset beginner --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 30 --background-transparency 80 -o subtle_overlay.png
 
+python wireframe_portrait_processor.py ./out_sample/clipped_images_fg/16151_fg.png --preset beginner --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 90 --background-transparency 30 -o subtle_overlay.png
+
 # Hybrid PNG/SVG output (ENHANCED ARCHITECTURE)
 python wireframe_portrait_processor.py input.jpg --preset intermediate --svg --svg-output wireframes.svg --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 --background-transparency 50 -o complete_raster.png
+
+
+# Hybrid PNG/SVG output (ENHANCED ARCHITECTURE)
+python wireframe_portrait_processor.py ./out_sample/clipped_images_fg/16151_fg.png --preset intermediate --svg --svg-output wireframes.svg --background-merge --foreground-dir out_sample/clipped_images_fg/ --background-dir out_sample/clipped_images_bg/ --foreground-transparency 100 --background-transparency 50 -o complete_raster.png
 
 # Pure wireframe SVG for overlay applications
 python wireframe_portrait_processor.py input.jpg --preset beginner --svg --svg-output pure_wireframe.svg --foreground-transparency 100 --background-transparency 0 -o /dev/null
