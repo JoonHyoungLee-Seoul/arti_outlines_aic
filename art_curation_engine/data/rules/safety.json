@@ -1,0 +1,115 @@
+{
+  "trauma_sensitive_mode": true,
+  "hard_avoid_subjects": ["violence", "threat", "war", "blood", "aggression", "death", "harm"],
+  "hard_avoid_color": [
+    {
+      "hue_deg": [0, 25],
+      "saturation_min": 70,
+      "value_range": [20, 50],
+      "note": "high-saturation dark reds associated with blood/violence/aggression"
+    },
+    {
+      "hue_deg": [30, 60],
+      "saturation_range": [20, 60],
+      "value_range": [10, 40],
+      "note": "dark browns/olives associated with decay, waste, and negative ecological valence"
+    },
+    {
+      "hue_deg": [0, 360],
+      "saturation_range": [0, 100],
+      "value_range": [0, 15],
+      "note": "very dark colors may trigger claustrophobic or depressive responses"
+    }
+  ],
+  "pediatric_safety": {
+    "age_range": [0, 18],
+    "additional_avoid": [
+      {
+        "hue_deg": [0, 30],
+        "saturation_min": 80,
+        "note": "high-intensity reds may overstimulate children and trigger aggressive responses"
+      }
+    ],
+    "prefer_ranges": [
+      {
+        "hue_deg": [180, 240],
+        "saturation_range": [30, 60],
+        "value_range": [70, 95],
+        "note": "calming blues with moderate saturation and high brightness for children"
+      },
+      {
+        "hue_deg": [60, 120],
+        "saturation_range": [40, 70],
+        "value_range": [80, 100],
+        "note": "nature-associated greens and yellows with bright, cheerful presentation"
+      }
+    ]
+  },
+  "clinical_context": {
+    "depression": {
+      "avoid": [
+        {
+          "saturation_range": [0, 20],
+          "value_range": [0, 30],
+          "note": "desaturated dark colors may reinforce depressive mood states"
+        }
+      ],
+      "gentle_boost": [
+        {
+          "hue_deg": [180, 240],
+          "saturation_range": [40, 70],
+          "value_range": [70, 90],
+          "note": "moderately saturated cool colors with good brightness for mood support"
+        }
+      ]
+    },
+    "anxiety": {
+      "avoid": [
+        {
+          "saturation_min": 70,
+          "note": "high saturation colors increase arousal and may exacerbate anxiety"
+        },
+        {
+          "hue_deg": [0, 60],
+          "saturation_range": [50, 100],
+          "note": "warm high-saturation colors associated with increased physiological arousal"
+        }
+      ]
+    },
+    "ptsd": {
+      "strict_avoid": [
+        {
+          "hue_deg": [0, 30],
+          "saturation_min": 60,
+          "note": "red colors may trigger trauma responses related to blood/violence"
+        },
+        {
+          "pattern": "high_contrast",
+          "note": "sharp contrasts may trigger hypervigilance responses"
+        }
+      ]
+    }
+  },
+  "cultural_sensitivity": {
+    "note": "Color associations vary across cultures - these rules based primarily on Western research",
+    "override_required": ["cultural_context_assessment"]
+  },
+  "actions": [
+    "filter_out_or_strong_penalty",
+    "log_safety_triggers",
+    "provide_alternative_suggestions",
+    "require_clinical_override_for_exceptions"
+  ],
+  "emergency_contacts": {
+    "note": "In therapeutic contexts, ensure qualified supervision is available",
+    "escalation_triggers": ["severe_negative_reaction", "trauma_flashback", "self_harm_indicators"]
+  },
+  "version": "1.0-safety",
+  "last_updated": "2024-12-30",
+  "evidence_base": [
+    "valdez_mehrabian_1994_pad",
+    "kuller_mikellides_2009_rooms", 
+    "zhang_yang_2025_art_therapy",
+    "palmer_schloss_2010_ecological_therapeutic"
+  ]
+}

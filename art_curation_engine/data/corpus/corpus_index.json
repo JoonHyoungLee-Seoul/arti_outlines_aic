@@ -1,0 +1,121 @@
+[
+  {
+    "id": "elliot-maier-2014-color-psychology-effects",
+    "title": "Color Psychology: Effects of Perceiving Color on Psychological Functioning in Humans",
+    "year": "2014",
+    "domain": "color_psychology",
+    "folder_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Credentials-Color-Psychology",
+    "md_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Credentials-Color-Psychology/Credentials-Color-Psychology.md",
+    "images": [],
+    "notes": "Comprehensive review of color psychology research covering achievement, attraction, and consumer behavior contexts",
+    "_provenance": {
+      "from": "markdown",
+      "title_source": "h1",
+      "year_source": "text_regex"
+    }
+  },
+  {
+    "id": "valdez-mehrabian-1994-effects-color-emotions",
+    "title": "Effects of Color on Emotions",
+    "year": "1994",
+    "domain": "color_psychology",
+    "folder_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effects_of_Color_on_Emotions",
+    "md_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effects_of_Color_on_Emotions/Effects_of_Color_on_Emotions.md",
+    "images": [
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effects_of_Color_on_Emotions/img-0.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effects_of_Color_on_Emotions/img-1.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effects_of_Color_on_Emotions/img-2.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effects_of_Color_on_Emotions/img-3.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effects_of_Color_on_Emotions/img-4.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effects_of_Color_on_Emotions/img-5.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effects_of_Color_on_Emotions/img-6.jpeg"
+    ],
+    "notes": "Foundational PAD emotion model study investigating emotional reactions to color hue, saturation, and brightness",
+    "_provenance": {
+      "from": "markdown",
+      "title_source": "h1",
+      "year_source": "text_regex"
+    }
+  },
+  {
+    "id": "kuller-mikellides-janssens-2009-color-arousal-performance",
+    "title": "Color, Arousal, and Performance: A Comparison of Three Experiments",
+    "year": "2009",
+    "domain": "color_psychology",
+    "folder_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis",
+    "md_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/Color_arousal_and_performance_A_comparis.md",
+    "images": [
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-0.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-1.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-2.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-3.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-4.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-5.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-6.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-7.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-8.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Color_arousal_and_performance_A_comparis/img-9.jpeg"
+    ],
+    "notes": "Full-scale room experiments examining physiological and psychological effects of colored interiors",
+    "_provenance": {
+      "from": "markdown",
+      "title_source": "h1",
+      "year_source": "text_regex"
+    }
+  },
+  {
+    "id": "palmer-schloss-2010-ecological-valence-theory",
+    "title": "An ecological valence theory of human color preference",
+    "year": "2010",
+    "domain": "color_psychology",
+    "folder_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/palmer-schloss-2010-an-ecological-valence-theory-of-human-color-preference",
+    "md_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/palmer-schloss-2010-an-ecological-valence-theory-of-human-color-preference/palmer-schloss-2010-an-ecological-valence-theory-of-human-color-preference.md",
+    "images": [
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/palmer-schloss-2010-an-ecological-valence-theory-of-human-color-preference/img-0.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/palmer-schloss-2010-an-ecological-valence-theory-of-human-color-preference/img-1.jpeg"
+    ],
+    "notes": "Theory proposing color preferences arise from affective responses to color-associated objects",
+    "_provenance": {
+      "from": "markdown",
+      "title_source": "h1",
+      "year_source": "filename"
+    }
+  },
+  {
+    "id": "xia-song-wang-2016-effect-red-blue-cognitive",
+    "title": "Exploring the Effect of Red and Blue on Cognitive Task Performances",
+    "year": "2016",
+    "domain": "color_psychology",
+    "folder_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effect-of-red-and-blue",
+    "md_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effect-of-red-and-blue/Effect-of-red-and-blue.md",
+    "images": [
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effect-of-red-and-blue/img-0.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effect-of-red-and-blue/img-1.jpeg"
+    ],
+    "notes": "Experimental study on how task type and difficulty modulate red/blue color effects on cognitive performance",
+    "_provenance": {
+      "from": "markdown",
+      "title_source": "h1",
+      "year_source": "text_regex"
+    }
+  },
+  {
+    "id": "zhang-yang-sun-2025-art-therapy-depression",
+    "title": "The effect of the art therapy interventions to alleviate depression symptoms among children and adolescents: a systematic review and meta-analysis",
+    "year": "2025",
+    "domain": "art_therapy",
+    "folder_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effect-of-the-art-therapy",
+    "md_path": "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effect-of-the-art-therapy/Effect-of-the-art-therapy.md",
+    "images": [
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effect-of-the-art-therapy/img-0.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effect-of-the-art-therapy/img-1.jpeg",
+      "/Users/ijunhyeong/Desktop/arti_llm/data/markdown/Effect-of-the-art-therapy/img-2.jpeg"
+    ],
+    "notes": "Meta-analysis of 12 controlled trials examining art therapy efficacy for pediatric depression",
+    "_provenance": {
+      "from": "markdown",
+      "title_source": "h1",
+      "year_source": "text_regex"
+    }
+  }
+]

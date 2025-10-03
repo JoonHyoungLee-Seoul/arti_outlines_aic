@@ -1,0 +1,55 @@
+# Core Dependencies
+python-dotenv>=1.0.0
+openai>=1.0.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# LangChain Ecosystem
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-openai>=0.0.5
+langchain-fireworks>=0.1.0
+langchain-huggingface>=0.0.1
+
+# LlamaIndex
+llama-index>=0.9.0
+llama-index-llms-openai>=0.1.0
+
+# Machine Learning & Embeddings
+sentence-transformers>=2.2.0
+transformers>=4.30.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Vector Search & Similarity
+faiss-cpu>=1.7.0
+chromadb>=0.4.0
+
+# CLIP & Image Processing  
+open-clip-torch>=2.20.0
+Pillow>=9.5.0
+
+# Data Processing
+jsonlines>=3.1.0
+markdown>=3.4.0
+beautifulsoup4>=4.12.0
+
+# Async & Concurrency
+asyncio
+aiofiles>=23.0.0
+
+# Utilities
+tqdm>=4.65.0
+requests>=2.31.0
+pathlib
+dataclasses
+
+# Development & Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+
+# Optional: For enhanced performance
+# accelerate>=0.20.0
+# bitsandbytes>=0.41.0

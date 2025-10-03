@@ -1,0 +1,117 @@
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyTorch
+*.pth
+*.pt
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# Conda
+conda-meta/
+
+# HuggingFace Cache
+.cache/
+.huggingface/
+
+# Model files and large data
+models/
+*.bin
+*.safetensors
+
+# FAISS indices
+indices/
+*.index
+*.faiss
+
+# Data files (too large for git)
+data/markdown/
+data/images/
+*.jsonl
+metadata.jsonl
+
+# Storage and cache
+storage/
+.cache/
+
+# Vector stores
+langchain_vectorstore/
+*.pkl
+*.pickle
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test outputs
+test_results/
+test_outputs/
+*.test
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# LangChain cache
+.langchain/
+
+# OpenAI cache
+.openai/
+
+art_curation_engine/data/aic_sample/images

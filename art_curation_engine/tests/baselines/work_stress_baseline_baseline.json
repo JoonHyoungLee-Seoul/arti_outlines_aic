@@ -1,0 +1,60 @@
+{
+  "scenario_id": "work_stress_baseline",
+  "timestamp": "2025-10-03T20:13:42.645755",
+  "overall_score": 0.9125,
+  "processing_time": 0.0005831718444824219,
+  "validation_results": [
+    {
+      "check_name": "step5_evidence_count",
+      "score": 1.0,
+      "actual_value": 12
+    },
+    {
+      "check_name": "stage_a_candidates",
+      "score": 1.0,
+      "actual_value": 150
+    },
+    {
+      "check_name": "step6_final_count",
+      "score": 1.0,
+      "actual_value": 30
+    },
+    {
+      "check_name": "evidence_alignment",
+      "score": 1.0,
+      "actual_value": 0.8175
+    },
+    {
+      "check_name": "citation_coverage",
+      "score": 1.0,
+      "actual_value": 1.0
+    },
+    {
+      "check_name": "dimensional_balance",
+      "score": 1.0,
+      "actual_value": {
+        "avg": 0.7841666666666667,
+        "std": 0.028047578623950197
+      }
+    },
+    {
+      "check_name": "theme_alignment",
+      "score": 0.3,
+      "actual_value": {
+        "theme_match_rate": 0.0,
+        "avoid_violation_rate": 0.0
+      }
+    },
+    {
+      "check_name": "processing_time",
+      "score": 1.0,
+      "actual_value": 4.32
+    }
+  ],
+  "pipeline_metrics": {
+    "evidence_count": 12,
+    "stage_a_candidates": 150,
+    "final_recommendations": null,
+    "evidence_alignment": 0.8175
+  }
+}

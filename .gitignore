@@ -89,6 +89,9 @@ results/
 temp/
 tmp/
 
+# Art Curation Engine - Image data
+art_curation_engine/data/aic_sample/images/
+
 # Logs
 *.log
 logs/
